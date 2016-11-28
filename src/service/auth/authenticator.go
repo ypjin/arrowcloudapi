@@ -7,6 +7,9 @@ import (
 	"utils/log"
 
 	"models"
+	"service/auth/dashboard"
+	"service/auth/db"
+	"service/auth/ldap"
 )
 
 // 1.5 seconds
@@ -23,10 +26,17 @@ type Authenticator interface {
 
 var registry = make(map[string]Authenticator)
 
+func init() {
+	Register("db_auth", &db.Auth{})
+	Register("ldap_auth", &ldap.Auth{})
+	Register("dashboard", &dashboard.Auth{})
+}
+
 // Register add different authenticators to registry map.
 func Register(name string, authenticator Authenticator) {
+	log.Debugf("about to register authenticator with name: %s", name)
 	if _, dup := registry[name]; dup {
-		log.Infof("authenticator: %s has been registered", name)
+		log.Warningf("authenticator: %s has been registered", name)
 		return
 	}
 	registry[name] = authenticator
@@ -37,7 +47,7 @@ func Login(m models.AuthModel) (*models.User, error) {
 
 	var authMode = os.Getenv("AUTH_MODE")
 	if authMode == "" || m.Principal == "admin" {
-		authMode = "db_auth"
+		authMode = "dashboard"
 	}
 	log.Debug("Current AUTH_MODE is ", authMode)
 

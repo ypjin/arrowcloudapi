@@ -4,8 +4,7 @@ import (
 	"dao"
 
 	"models"
-
-	"service/auth"
+	// "service/auth"
 )
 
 // Auth implements Authenticator interface to authenticate user against DB.
@@ -20,6 +19,7 @@ func (d *Auth) Authenticate(m models.AuthModel) (*models.User, error) {
 	return u, nil
 }
 
-func init() {
-	auth.Register("db_auth", &Auth{})
-}
+// func init() {
+// 	log.Debugff("db authenticator self registering...")
+// 	auth.Register("db_auth", &Auth{})
+// }

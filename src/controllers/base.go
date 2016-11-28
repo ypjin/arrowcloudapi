@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -161,7 +162,7 @@ func init() {
 		}
 		langTypes = append(langTypes, &t)
 		supportLanguages[lang] = t
-		if err := i18n.SetMessage(lang, "../static/i18n/"+"locale_"+lang+".ini"); err != nil {
+		if err := i18n.SetMessage(lang, path.Join(beego.AppPath, "static/i18n/locale_"+lang+".ini")); err != nil {
 			log.Errorf("Fail to set message file: %s", err.Error())
 		}
 	}

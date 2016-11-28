@@ -12,7 +12,7 @@ import (
 
 	"models"
 
-	"service/auth"
+	// "service/auth"
 
 	"github.com/mqu/openldap"
 )
@@ -144,6 +144,7 @@ func (l *Auth) Authenticate(m models.AuthModel) (*models.User, error) {
 	return &u, nil
 }
 
-func init() {
-	auth.Register("ldap_auth", &Auth{})
-}
+// func init() {
+// 	log.Debugf("ldap authenticator self registering...")
+// 	auth.Register("ldap_auth", &Auth{})
+// }

@@ -1,10 +1,14 @@
 package utils
 
 import (
+	"encoding/json"
 	"math/rand"
 	"net/url"
 	"strings"
 	"time"
+	"utils/log"
+
+	"github.com/jeffail/gabs"
 )
 
 // FormatEndpoint formats endpoint
@@ -54,4 +58,22 @@ func GenerateRandomString() string {
 		result[i] = chars[rand.Intn(len(chars))]
 	}
 	return string(result)
+}
+
+func PrettyPrintObject(obj interface{}) (err error) {
+
+	//fmt.Printf("%+v\n", obj);
+	objJson, err := json.Marshal(obj)
+	//fmt.Println(string(objJson))
+	if err != nil {
+		return
+	}
+
+	objJson2, err := gabs.ParseJSON(objJson)
+	if err != nil {
+		return
+	}
+
+	log.Debug(objJson2.StringIndent("", "  "))
+	return
 }
