@@ -113,7 +113,8 @@ func (b *BaseController) Prepare() {
 	b.Data["SelfRegistration"] = b.SelfRegistration
 }
 
-// Forward to setup layout and template for content for a page.
+// Forward setup layout and template for a page.
+// https://beego.me/docs/mvc/view/view.md
 func (b *BaseController) Forward(title, templateName string) {
 	b.Layout = filepath.Join(prefixNg, "layout.htm")
 	b.TplName = filepath.Join(prefixNg, templateName)
