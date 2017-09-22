@@ -3,6 +3,7 @@ package dao
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strings"
 	"sync"
 
@@ -79,6 +80,7 @@ var once sync.Once
 
 // GetOrmer :set ormer singleton
 func GetOrmer() orm.Ormer {
+	debug.PrintStack()
 	once.Do(func() {
 		globalOrm = orm.NewOrm()
 	})

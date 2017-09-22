@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"api"
 	"controllers"
 
 	"github.com/astaxie/beego"
@@ -38,5 +39,7 @@ func init() {
 	beego.Router("/navigation_header", &controllers.NavigationHeaderController{})
 	beego.Router("/navigation_detail", &controllers.NavigationDetailController{})
 	beego.Router("/sign_in", &controllers.SignInController{})
+
+	beego.Router("/api/services/", &api.ServiceAPI{}, "get:List;post:Post")
 
 }

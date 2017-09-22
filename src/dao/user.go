@@ -6,47 +6,42 @@ import (
 	"fmt"
 
 	"models"
+	"mongo"
 	"utils"
-
 	"utils/log"
+
+	"gopkg.in/mgo.v2/bson"
 )
+
+var USERS_COLLECTION = "arrowcloud:users"
 
 // GetUser ...
 func GetUser(query models.User) (*models.User, error) {
 
-	o := GetOrmer()
+	dbQ := bson.M{}
 
-	sql := `select user_id, username, email, realname, comment, reset_uuid, salt,
-		sysadmin_flag, creation_time, update_time
-		from user u
-		where deleted = 0 `
-	queryParam := make([]interface{}, 1)
-	if query.UserID != 0 {
-		sql += ` and user_id = ? `
-		queryParam = append(queryParam, query.UserID)
+	if query.UserID != "" {
+		dbQ["_id"] = query.UserID
 	}
-
 	if query.Username != "" {
-		sql += ` and username = ? `
-		queryParam = append(queryParam, query.Username)
+		dbQ["username"] = query.Username
 	}
 
-	if query.ResetUUID != "" {
-		sql += ` and reset_uuid = ? `
-		queryParam = append(queryParam, query.ResetUUID)
-	}
-
-	var u []models.User
-	n, err := o.Raw(sql, queryParam).QueryRows(&u)
+	result, err := mongo.FindOneDocument(USERS_COLLECTION, dbQ)
 
 	if err != nil {
 		return nil, err
 	}
-	if n == 0 {
-		return nil, nil
+
+	user := &models.User{
+		UserID:    result["_id"].(string),
+		Username:  result["username"].(string),
+		Email:     result["email"].(string),
+		Firstname: result["firstname"].(string),
+		Lastname:  result["lastname"].(string),
 	}
 
-	return &u[0], nil
+	return user, nil
 }
 
 // LoginByDb is used for user to login with database auth mode.
@@ -199,7 +194,7 @@ func CheckUserPassword(query models.User) (*models.User, error) {
 }
 
 // DeleteUser ...
-func DeleteUser(userID int) error {
+func DeleteUser(userID string) error {
 	o := GetOrmer()
 
 	user, err := GetUser(models.User{

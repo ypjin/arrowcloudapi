@@ -25,7 +25,7 @@ func (omc *OptionalMenuController) Get() {
 
 	if sessionUserID != nil {
 		hasLoggedIn = true
-		userID := sessionUserID.(int)
+		userID := sessionUserID.(string)
 		u, err := dao.GetUser(models.User{UserID: userID})
 		if err != nil {
 			log.Errorf("Error occurred in GetUser, error: %v", err)
@@ -37,7 +37,7 @@ func (omc *OptionalMenuController) Get() {
 		}
 		omc.Data["Username"] = u.Username
 
-		if userID == 1 {
+		if userID == "" { // need to fix
 			isAdminForLdap = true
 		}
 
@@ -45,7 +45,7 @@ func (omc *OptionalMenuController) Get() {
 			allowSettingAccount = true
 		}
 
-		isAdmin, err := dao.IsAdminRole(sessionUserID.(int))
+		isAdmin, err := dao.IsAdminRole(map[string]string{"UserID": userID})
 		if err != nil {
 			log.Errorf("Error occurred in IsAdminRole: %v", err)
 			omc.CustomAbort(http.StatusInternalServerError, "")

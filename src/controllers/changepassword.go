@@ -8,8 +8,8 @@ type ChangePasswordController struct {
 // Get renders the change password page
 func (cpc *ChangePasswordController) Get() {
 	var isAdminForLdap bool
-	sessionUserID, ok := cpc.GetSession("userId").(int)
-	if ok && sessionUserID == 1 {
+	sessionUserID, ok := cpc.GetSession("userId").(string)
+	if ok && sessionUserID == "1" { //to be fixed
 		isAdminForLdap = true
 	}
 	if cpc.AuthMode == "db_auth" || isAdminForLdap {

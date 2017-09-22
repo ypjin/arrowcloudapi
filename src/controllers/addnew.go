@@ -17,7 +17,7 @@ func (anc *AddNewController) Get() {
 	sessionUserID := anc.GetSession("userId")
 	anc.Data["AddNew"] = false
 	if sessionUserID != nil {
-		isAdmin, err := dao.IsAdminRole(sessionUserID.(int))
+		isAdmin, err := dao.IsAdminRole(map[string]string{"UserID": sessionUserID.(string)})
 		if err != nil {
 			log.Errorf("Error occurred in IsAdminRole: %v", err)
 			anc.CustomAbort(http.StatusInternalServerError, "")

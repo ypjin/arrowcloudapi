@@ -26,13 +26,6 @@ const (
 	thisEnvAdminURL = "http://admin.cloudapp-1.appctest.com"
 )
 
-type Org struct {
-	Id             string
-	Name           string
-	Admin          bool
-	Node_acs_admin bool
-}
-
 // Auth implements Authenticator interface to authenticate user against DB.
 type Auth struct{}
 
@@ -176,13 +169,24 @@ func (d *Auth) Authenticate(m models.AuthModel) (*models.User, error) {
 	user["orgs_360"] = orgs
 	user["orgs_360_updated_at"] = time.Now()
 
-	err = saveUser(user)
+	savedUser, err := saveUser(user)
 	if err != nil {
 		log.Errorf("Failed to save user. %v", err)
 		return nil, err
 	}
 
-	mUser := &models.User{}
+	mUser := &models.User{
+		UserID:   savedUser["_id"].(bson.ObjectId).Hex(),
+		Username: jsonBody.Path("result.username").Data().(string),
+		Email:    jsonBody.Path("result.email").Data().(string),
+		Orgs:     orgs,
+	}
+	if jsonBody.Path("result.firstname").Data() != nil {
+		mUser.Firstname = jsonBody.Path("result.firstname").Data().(string)
+	} else {
+		mUser.Firstname = jsonBody.Path("result.username").Data().(string)
+	}
+
 	return mUser, nil
 }
 
@@ -208,7 +212,7 @@ func handleDashboardSession(username, sid_360, cookie string) error {
 	return saveDashboardSession(db_session)
 }
 
-func getAndVerifyOrgInfoFrom360(username, sid string) (haveAccess bool, orgs []Org, err error) {
+func getAndVerifyOrgInfoFrom360(username, sid string) (haveAccess bool, orgs []models.Org, err error) {
 
 	// reqTimeout := 20000; //20s
 
@@ -334,19 +338,19 @@ func getAndVerifyOrgInfoFrom360(username, sid string) (haveAccess bool, orgs []O
 
 }
 
-func checkOrgs(orgArray []interface{}) (orgs []Org, haveAccess bool) {
+func checkOrgs(orgArray []interface{}) (orgs []models.Org, haveAccess bool) {
 
 	log.Debugf("check if user's organizations have access to this domain")
 	re := regexp.MustCompile("^(http|https)://") //https://golang.org/pkg/regexp/#MustCompile
 	thisEnvHost := re.ReplaceAllString(thisEnvAdminURL, "")
 
-	orgs = []Org{} //organizations which can access this domain (deployment)
+	orgs = []models.Org{} //organizations which can access this domain (deployment)
 	userOrgIds := []string{}
 
 	for _, orgData := range orgArray {
 
 		orgDoc := orgData.(map[string]interface{})
-		orgToSave := Org{
+		orgToSave := models.Org{
 			Id:             strconv.FormatFloat(orgDoc["org_id"].(float64), 'f', -1, 64),
 			Name:           orgDoc["name"].(string),
 			Admin:          orgDoc["current_users_role"].(string) == "admin",
@@ -454,18 +458,18 @@ func saveDashboardSession(session bson.M) error {
 /**
  * insert or update user information upon login to Appcelerator's sso interface
  */
-func saveUser(user bson.M) error {
+func saveUser(user bson.M) (bson.M, error) {
 
-	_, err := mongo.UpsertDocument(mongo.STRATUS_USERS_COLL,
+	saved, err := mongo.UpsertDocument(mongo.STRATUS_USERS_COLL,
 		bson.M{"guid": user["guid"]}, user)
 
 	if err != nil {
 		log.Errorf("Failed to save user. %v", err)
-		return err
+		return nil, err
 	}
 
 	log.Debugf("Upserted %v into %s collection.", user, mongo.STRATUS_USERS_COLL)
-	return nil
+	return saved, nil
 }
 
 //TOOD use request module to support proxy

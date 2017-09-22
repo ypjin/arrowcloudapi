@@ -139,7 +139,7 @@ func (l *Auth) Authenticate(m models.AuthModel) (*models.User, error) {
 		if err != nil {
 			return nil, err
 		}
-		u.UserID = int(userID)
+		u.UserID = userID
 	}
 	return &u, nil
 }

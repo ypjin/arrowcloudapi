@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"utils/log"
+
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -23,7 +24,7 @@ func FindOneDocument(collectionPrefixedWithDB string, query bson.M) (result bson
 	err = c.Find(query).One(&result)
 
 	if err != nil {
-		log.Errorf("query err: %v", err)
+		log.Errorf("Query err: %v", err)
 	}
 
 	return
@@ -75,9 +76,64 @@ func UpsertDocument(collectionPrefixedWithDB string, query, update bson.M) (resu
 	_, err = c.Find(query).Apply(change, &result)
 
 	if err != nil {
-		log.Errorf("findAndModify err: %v", err)
+		log.Errorf("FindAndModify err: %v", err)
+	}
+
+	//log.Debugf("findAndModify result: %v", result)
+	return
+}
+
+func InsertDocument(collectionPrefixedWithDB string, doc bson.M) (err error) {
+
+	dBName, collectionName := getDBAndCollectionName(collectionPrefixedWithDB)
+
+	session := GetSession()
+	defer session.Close()
+
+	c := session.DB(dBName).C(collectionName)
+
+	err = c.Insert(doc)
+
+	if err != nil {
+		log.Errorf("Insert err: %v", err)
+	}
+
+	return err
+}
+
+func RemoveDocument(collectionPrefixedWithDB string, query bson.M) (err error) {
+
+	dBName, collectionName := getDBAndCollectionName(collectionPrefixedWithDB)
+
+	session := GetSession()
+	defer session.Close()
+
+	c := session.DB(dBName).C(collectionName)
+
+	//https://godoc.org/gopkg.in/mgo.v2#Collection.Remove
+	err = c.Remove(query)
+
+	if err != nil {
+		log.Errorf("Remove err: %v", err)
 	}
 
 	return
+}
 
+func RemoveDocuments(collectionPrefixedWithDB string, query bson.M) (err error) {
+
+	dBName, collectionName := getDBAndCollectionName(collectionPrefixedWithDB)
+
+	session := GetSession()
+	defer session.Close()
+
+	c := session.DB(dBName).C(collectionName)
+
+	_, err = c.RemoveAll(query)
+
+	if err != nil {
+		log.Errorf("RemoveAll err: %v", err)
+	}
+
+	return
 }

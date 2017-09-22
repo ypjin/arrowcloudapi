@@ -9,26 +9,27 @@ import (
 )
 
 // Register is used for user to register, the password is encrypted before the record is inserted into database.
-func Register(user models.User) (int64, error) {
+func Register(user models.User) (string, error) {
 	o := GetOrmer()
 	p, err := o.Raw("insert into user (username, password, realname, email, comment, salt, sysadmin_flag, creation_time, update_time) values (?, ?, ?, ?, ?, ?, ?, ?, ?)").Prepare()
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 	defer p.Close()
 
 	salt := utils.GenerateRandomString()
 
 	now := time.Now()
-	r, err := p.Exec(user.Username, utils.Encrypt(user.Password, salt), user.Realname, user.Email, user.Comment, salt, user.HasAdminRole, now, now)
+	_, err = p.Exec(user.Username, utils.Encrypt(user.Password, salt), user.Realname, user.Email, user.Comment, salt, user.HasAdminRole, now, now)
 
 	if err != nil {
-		return 0, err
+		return "", err
 	}
-	userID, err := r.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
+	userID := ""
+	// userID, err := r.LastInsertId()
+	// if err != nil {
+	// 	return "", err
+	// }
 
 	return userID, nil
 }

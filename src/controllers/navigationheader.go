@@ -20,7 +20,7 @@ func (nhc *NavigationHeaderController) Get() {
 	var isAdmin int
 	if sessionUserID != nil {
 		hasLoggedIn = true
-		userID := sessionUserID.(int)
+		userID := sessionUserID.(string)
 		u, err := dao.GetUser(models.User{UserID: userID})
 		if err != nil {
 			log.Errorf("Error occurred in GetUser, error: %v", err)

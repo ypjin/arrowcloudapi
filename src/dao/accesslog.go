@@ -142,10 +142,10 @@ func AccessLog(username, projectName, repoName, repoTag, action string) error {
 }
 
 //GetRecentLogs returns recent logs according to parameters
-func GetRecentLogs(userID, linesNum int, startTime, endTime string) ([]models.AccessLog, error) {
+func GetRecentLogs(userID string, linesNum int, startTime, endTime string) ([]models.AccessLog, error) {
 	logs := []models.AccessLog{}
 
-	isAdmin, err := IsAdminRole(userID)
+	isAdmin, err := IsAdminRole(map[string]string{"UserID": userID})
 	if err != nil {
 		return logs, err
 	}

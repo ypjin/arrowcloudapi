@@ -7,6 +7,10 @@ import (
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 
+	"service/swarm"
+	"service/swarm/docker"
+
+	_ "beego_ext"
 	"utils/log"
 )
 
@@ -14,9 +18,26 @@ func main() {
 
 	log.SetLevel(log.DebugLevel)
 
+	// https://beego.me/docs/mvc/controller/config.md
+	// https://beego.me/docs/mvc/controller/session.md
 	beego.BConfig.WebConfig.Session.SessionOn = true
+	beego.BConfig.WebConfig.Session.SessionProvider = "mongo"
+	beego.BConfig.WebConfig.Session.SessionProviderConfig = ""
+	beego.BConfig.WebConfig.Session.SessionName = "beegosessionID"
+	beego.BConfig.WebConfig.Session.SessionGCMaxLifetime = 3600
+	beego.BConfig.WebConfig.Session.SessionCookieLifeTime = 3600
+	beego.BConfig.WebConfig.Session.SessionDomain = ""
 
 	beego.AddTemplateExt("htm")
+
+	// dao.InitDatabase()
+
+	err := swarm.Initialize()
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = docker.ListNodes()
 
 	dbOpts := map[string]string{
 		"hostname": "localhost",
@@ -24,7 +45,7 @@ func main() {
 		"dbname":   "arrowcloud",
 	}
 
-	err := mongo.Initialize(dbOpts)
+	err = mongo.Initialize(dbOpts)
 	if err != nil {
 		panic(err)
 	}

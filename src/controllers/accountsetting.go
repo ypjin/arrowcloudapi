@@ -8,8 +8,8 @@ type AccountSettingController struct {
 // Get renders the account settings page
 func (asc *AccountSettingController) Get() {
 	var isAdminForLdap bool
-	sessionUserID, ok := asc.GetSession("userId").(int)
-	if ok && sessionUserID == 1 {
+	sessionUserID, ok := asc.GetSession("userId").(string)
+	if ok && sessionUserID == "1" { //to be fixed
 		isAdminForLdap = true
 	}
 	if asc.AuthMode == "db_auth" || isAdminForLdap {

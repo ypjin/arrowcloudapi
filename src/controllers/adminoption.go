@@ -12,9 +12,9 @@ type AdminOptionController struct {
 
 // Get renders the admin options  page
 func (aoc *AdminOptionController) Get() {
-	sessionUserID, ok := aoc.GetSession("userId").(int)
+	sessionUserID, ok := aoc.GetSession("userId").(string)
 	if ok {
-		isAdmin, err := dao.IsAdminRole(sessionUserID)
+		isAdmin, err := dao.IsAdminRole(map[string]string{"UserID": sessionUserID})
 		if err != nil {
 			log.Errorf("Error occurred in IsAdminRole: %v", err)
 		}

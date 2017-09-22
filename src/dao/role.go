@@ -32,19 +32,18 @@ func GetUserProjectRoles(userID int, projectID int64) ([]models.Role, error) {
 }
 
 // IsAdminRole returns whether the user is admin.
-func IsAdminRole(userIDOrUsername interface{}) (bool, error) {
+func IsAdminRole(userInfo map[string]string) (bool, error) {
 	u := models.User{}
 
-	switch v := userIDOrUsername.(type) {
-	case int:
-		u.UserID = v
-	case string:
-		u.Username = v
-	default:
-		return false, fmt.Errorf("invalid parameter, only int and string are supported: %v", userIDOrUsername)
+	if userInfo["UserID"] != "" {
+		u.UserID = userInfo["UserID"]
+	} else if userInfo["Username"] != "" {
+		u.Username = userInfo["Username"]
+	} else {
+		return false, fmt.Errorf("invalid parameter, one of userID and Username is required: %v", userInfo)
 	}
 
-	if u.UserID == NonExistUserID && len(u.Username) == 0 {
+	if u.UserID == "" && len(u.Username) == 0 {
 		return false, nil
 	}
 

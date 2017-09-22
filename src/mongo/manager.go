@@ -4,11 +4,14 @@ import (
 	"strconv"
 	"strings"
 	"utils/log"
+
 	"gopkg.in/mgo.v2"
 )
 
 var session *mgo.Session
 
+//mongodb://username:password@host1:port,host2:port,host3:port/dbname?replicaSet=rsname
+//mongodb://username:password@host:port/dbname
 func Initialize(options map[string]string) (err error) {
 
 	hostname := options["hostname"]

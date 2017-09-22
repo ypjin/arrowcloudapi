@@ -1,14 +1,23 @@
 package models
 
-import (
-	"time"
-)
+import "time"
+
+type Org struct {
+	Id             string
+	Name           string
+	Admin          bool
+	Node_acs_admin bool
+}
 
 // User holds the details of a user.
 type User struct {
-	UserID   int    `orm:"pk;column(user_id)" json:"user_id"`
-	Username string `orm:"column(username)" json:"username"`
-	Email    string `orm:"column(email)" json:"email"`
+	UserID    string `orm:"pk;column(_id)" json:"user_id"`
+	Username  string `orm:"column(username)" json:"username"`
+	Email     string `orm:"column(email)" json:"email"`
+	Firstname string `orm:"column(firstname)" json:"firstname"`
+	Lastname  string `orm:"column(lastname)" json:"lastname"`
+	Orgs      []Org  `orm:"-" json:"orgs"`
+
 	Password string `orm:"column(password)" json:"password"`
 	Realname string `orm:"column(realname)" json:"realname"`
 	Comment  string `orm:"column(comment)" json:"comment"`
