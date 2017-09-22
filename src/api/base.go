@@ -49,7 +49,10 @@ func (b *BaseAPI) DecodeJSONReq(v interface{}) {
 	}
 }
 
-// Validate validates v if it implements interface validation.ValidFormer
+// Validate validates v. v should be a struct or a struct pointer.
+// It calls the Valid (better named as Validate) func to validate the struct.
+// A struct can define validation funcs per field with the "valid" tag. In addition, it can implements
+// validation.ValidFormer (better named as Validator) interface to provide its own validation logic.
 func (b *BaseAPI) Validate(v interface{}) {
 	validator := validation.Validation{}
 	isValid, err := validator.Valid(v)
