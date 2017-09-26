@@ -1,12 +1,10 @@
 package api
 
 import (
-	"dao"
 	"fmt"
-	"models"
 	"net/http"
 	"regexp"
-	"time"
+	"service/swarm"
 	"utils/log"
 )
 
@@ -34,63 +32,144 @@ const stackNameMaxLen int = 30
 const stackNameMinLen int = 4
 const dupStackPattern = `Duplicate entry '\w+' for key 'name'`
 
-func (p *StackAPI) Prepare() {
+// func (p *StackAPI) Prepare() {
 
-	p.userID = p.ValidateUser()
+// 	p.userID = p.ValidateUser()
 
-	nameStr := p.Ctx.Input.Param(":name") //stack name
-	if len(nameStr) > 0 {
-		p.stackName = nameStr
+// 	nameStr := p.Ctx.Input.Param(":name") //stack name
+// 	if len(nameStr) > 0 {
+// 		p.stackName = nameStr
 
-		stack, err := dao.GetStack(p.stackID)
-		if err != nil {
-			log.Errorf("failed to get stack %d: %v", p.stackName, err)
-			p.CustomAbort(http.StatusInternalServerError, "Internal error.")
-		}
-		if stack == nil {
-			p.CustomAbort(http.StatusNotFound, fmt.Sprintf("stack %s does not exist.", p.stackName))
-		}
-		p.stackID = stack.StackID
-	}
-}
+// 		stack, err := dao.GetStack(p.stackID)
+// 		if err != nil {
+// 			log.Errorf("failed to get stack %d: %v", p.stackName, err)
+// 			p.CustomAbort(http.StatusInternalServerError, "Internal error.")
+// 		}
+// 		if stack == nil {
+// 			p.CustomAbort(http.StatusNotFound, fmt.Sprintf("stack %s does not exist.", p.stackName))
+// 		}
+// 		p.stackID = stack.StackID
+// 	}
+// }
 
 // Deploy a stack with provided compose file
+
+// http://sweetohm.net/article/go-yaml-parsers.en.html
+// https://stackoverflow.com/questions/32147325/how-to-parse-yaml-with-dyanmic-key-in-golang
+// http://ghodss.com/2014/the-right-way-to-handle-yaml-in-golang/
+
+// https://stackoverflow.com/questions/32310838/upload-file-with-same-format-using-beego
+// https://stackoverflow.com/questions/26750457/multiple-file-upload-with-beego
 func (p *StackAPI) Deploy() {
 
-	var req stackReq
-	p.DecodeJSONReq(&req)
-	err := validateStackReq(req)
+	stackName := p.Ctx.Input.Param(":name") //stack name
+
+	log.Debugf("Stack name is %s", stackName)
+
+	myField := p.GetString("my_field")
+	log.Debugf("myField: %s", myField)
+	//myBuffer := p.Get
+
+	file, header, err := p.GetFile(stackName) // where <<this>> is the controller and <<file>> the id of your form field
 	if err != nil {
-		log.Errorf("Invalid stack request, error: %v", err)
-		p.RenderError(http.StatusBadRequest, fmt.Sprintf("invalid request: %v", err))
-		return
+		log.Errorf("GetFile error: %v", err)
+		p.CustomAbort(http.StatusInternalServerError, "internal error")
 	}
-	stackName := req.StackName
-	exist, err := dao.StackExists(stackName)
-	if err != nil {
-		log.Errorf("Error happened checking stack existence in db, error: %v, stack name: %s", err, stackName)
-	}
-	if exist {
-		p.RenderError(http.StatusConflict, "")
-		return
-	}
-	stack := models.Stack{UserID: p.userID, Name: stackName, CreationTime: time.Now()}
-	stackID, err := dao.SaveStack(stack)
-	if err != nil {
-		log.Errorf("Failed to add stack, error: %v", err)
-		dup, _ := regexp.MatchString(dupStackPattern, err.Error())
-		if dup {
-			p.RenderError(http.StatusConflict, "")
-		} else {
-			p.RenderError(http.StatusInternalServerError, "Failed to add stack")
+
+	composeFile := "/Users/yjin/abc.yaml"
+
+	if file != nil {
+		// get the filename
+		fileName := header.Filename
+		log.Debugf("fileName: %v", fileName)
+		// save to server
+		err := p.SaveToFile(stackName, composeFile)
+		if err != nil {
+			log.Errorf("SaveToFile error: %v", err)
+			p.CustomAbort(http.StatusInternalServerError, "internal error")
 		}
-		return
 	}
-	p.Redirect(http.StatusCreated, stackID)
+
+	// var rr interface{}
+
+	// err = json.Unmarshal([]byte(`{"success": true}`), &rr)
+	// if err != nil {
+	// 	log.Errorf("Unmarshal error: %v", err)
+	// 	p.CustomAbort(http.StatusInternalServerError, "internal error")
+	// }
+
+	// p.Data["json"] = rr
+
+	output, err := swarm.DeployStack(stackName, composeFile)
+	if err != nil {
+		log.Errorf("Deploy error: %v", err)
+		p.CustomAbort(http.StatusInternalServerError, "internal error")
+	}
+
+	result := map[string]interface{}{
+		"success": true,
+		"data":    output,
+	}
+
+	p.Data["json"] = result
+
+	p.ServeJSON()
+
+	// var req stackReq
+	// p.DecodeJSONReq(&req)
+	// err := validateStackReq(req)
+	// if err != nil {
+	// 	log.Errorf("Invalid stack request, error: %v", err)
+	// 	p.RenderError(http.StatusBadRequest, fmt.Sprintf("invalid request: %v", err))
+	// 	return
+	// }
+	// stackName := req.StackName
+	// exist, err := dao.StackExists(stackName)
+	// if err != nil {
+	// 	log.Errorf("Error happened checking stack existence in db, error: %v, stack name: %s", err, stackName)
+	// }
+	// if exist {
+	// 	p.RenderError(http.StatusConflict, "")
+	// 	return
+	// }
+	// stack := models.Stack{UserID: p.userID, Name: stackName, CreationTime: time.Now()}
+	// stackID, err := dao.SaveStack(stack)
+	// if err != nil {
+	// 	log.Errorf("Failed to add stack, error: %v", err)
+	// 	dup, _ := regexp.MatchString(dupStackPattern, err.Error())
+	// 	if dup {
+	// 		p.RenderError(http.StatusConflict, "")
+	// 	} else {
+	// 		p.RenderError(http.StatusInternalServerError, "Failed to add stack")
+	// 	}
+	// 	return
+	// }
+	// p.Redirect(http.StatusCreated, stackID)
 }
 
 // Delete a stack
 func (p *StackAPI) Delete() {
+
+	stackName := p.Ctx.Input.Param(":stackname") //stack name
+	log.Debugf("Stack name is %s", stackName)
+
+	output, err := swarm.RemoveStack(stackName)
+	if err != nil {
+		log.Errorf("RemoveStack error: %v", err)
+		p.CustomAbort(http.StatusInternalServerError, "internal error")
+	}
+
+	log.Debugf("data for response: %s", output)
+
+	result := map[string]interface{}{
+		"success": true,
+		"data":    output,
+	}
+
+	p.Data["json"] = result
+
+	p.ServeJSON()
+
 	// if p.stackID == 0 {
 	// 	p.CustomAbort(http.StatusBadRequest, "stack ID is required")
 	// }
@@ -138,6 +217,7 @@ func (p *StackAPI) Delete() {
 }
 
 // List stacks available for the logged in user
+// Get result by calling "docker stack ls" directly
 func (p *StackAPI) List() {
 	// var total int64
 	// var err error
@@ -158,13 +238,95 @@ func (p *StackAPI) List() {
 	// p.SetPaginationHeader(total, page, pageSize)
 	// p.Data["json"] = stackList
 	// p.ServeJSON()
+
+	output, err := swarm.ListStacks()
+	if err != nil {
+		log.Errorf("ListStacks error: %v", err)
+		p.CustomAbort(http.StatusInternalServerError, "internal error")
+	}
+
+	log.Debugf("data for response: %s", output)
+
+	result := map[string]interface{}{
+		"success": true,
+		"data":    output,
+	}
+
+	p.Data["json"] = result
+
+	p.ServeJSON()
 }
 
-func (p *StackAPI) Log() {
+// List stacks by calling docker daemon API
+func (p *StackAPI) ListFromAPI() {
+
+	stacks, err := swarm.ListStacksFromAPI()
+	if err != nil {
+		log.Errorf("ListStacks error: %v", err)
+		p.CustomAbort(http.StatusInternalServerError, "internal error")
+	}
+
+	log.Debugf("data for response: %v", stacks)
+
+	result := map[string]interface{}{
+		"success": true,
+		"data":    stacks,
+	}
+
+	p.Data["json"] = result
+
+	p.ServeJSON()
+}
+
+func (p *StackAPI) GetServiceLog() {
+
+	stackName := p.GetString("stackname")     //p.Ctx.Input.Param(":stackname")     //stack name
+	serviceName := p.GetString("servicename") //p.Ctx.Input.Param(":servicename") //service name
+
+	log.Debugf("Stack name is %s", stackName)
+	log.Debugf("Service name is %s", serviceName)
+
+	output, err := swarm.GetServiceLog(stackName, serviceName)
+	if err != nil {
+		log.Errorf("getServiceLog error: %v", err)
+		p.CustomAbort(http.StatusInternalServerError, "internal error")
+	}
+
+	log.Debugf("data for response: %s", output)
+
+	result := map[string]interface{}{
+		"success": true,
+		"data":    output,
+	}
+
+	p.Data["json"] = result
+
+	p.ServeJSON()
 
 }
 
 func (p *StackAPI) CheckServices() {
+
+	stackName := p.GetString("stackname") //p.Ctx.Input.Param(":stackname") //stack name
+
+	log.Debugf("Stack name is %s", stackName)
+
+	output, err := swarm.CheckServices(stackName)
+	if err != nil {
+		log.Errorf("CheckServices error: %v", err)
+		p.CustomAbort(http.StatusInternalServerError, "internal error")
+	}
+
+	log.Debugf("data for response: %s", output)
+
+	result := map[string]interface{}{
+		"success": true,
+		"data":    output,
+	}
+
+	p.Data["json"] = result
+
+	p.ServeJSON()
 
 }
 

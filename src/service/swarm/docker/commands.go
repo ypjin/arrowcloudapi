@@ -12,6 +12,12 @@ import (
 	"github.com/docker/docker/api/types/swarm"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/tlsconfig"
+	"github.com/pkg/errors"
+)
+
+const (
+	// LabelNamespace is the label used to track stack resources
+	LabelNamespace = "com.docker.stack.namespace"
 )
 
 var (
@@ -53,6 +59,51 @@ func ListNodes() (nodes []swarm.Node, err error) {
 	log.Infof("%v", dockerClient)
 
 	return dockerClient.NodeList(context.Background(), options)
+}
+
+// https://github.com/docker/cli/blob/master/cli/command/stack/list.go
+func ListStacks() (map[string]int, error) {
+
+	options := types.ServiceListOptions{}
+	options.Filters = getAllStacksFilter()
+
+	services, err := dockerClient.ServiceList(context.Background(), options)
+	if err != nil {
+		return nil, err
+	}
+
+	m := make(map[string]int)
+
+	for _, service := range services {
+		labels := service.Spec.Labels
+		name, ok := labels[LabelNamespace]
+		if !ok {
+			return nil, errors.Errorf("cannot get label %s for service %s",
+				LabelNamespace, service.ID)
+		}
+		numServices, ok := m[name]
+		if !ok {
+			m[name] = 1
+		} else {
+			m[name] = numServices + 1
+		}
+	}
+
+	return m, nil
+
+}
+
+// https://github.com/docker/cli/blob/master/cli/command/stack/common.go
+func getStackFilter(namespace string) filters.Args {
+	filter := filters.NewArgs()
+	filter.Add("label", LabelNamespace+"="+namespace)
+	return filter
+}
+
+func getAllStacksFilter() filters.Args {
+	filter := filters.NewArgs()
+	filter.Add("label", LabelNamespace)
+	return filter
 }
 
 func ListServices() (services []swarm.Service, err error) {
@@ -125,8 +176,8 @@ func newSSLClient(host string, version string, dockerCertPath string) (*client.C
 	var httpClient *http.Client
 	options := tlsconfig.Options{
 		CAFile:             filepath.Join(dockerCertPath, "ca.pem"),
-		CertFile:           filepath.Join(dockerCertPath, "server-cert.pem"),
-		KeyFile:            filepath.Join(dockerCertPath, "server-key.pem"),
+		CertFile:           filepath.Join(dockerCertPath, "cert.pem"),
+		KeyFile:            filepath.Join(dockerCertPath, "key.pem"),
 		InsecureSkipVerify: true,
 	}
 	tlsc, err := tlsconfig.Client(options)

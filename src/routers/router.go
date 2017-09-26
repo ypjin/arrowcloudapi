@@ -40,9 +40,9 @@ func init() {
 	beego.Router("/navigation_detail", &controllers.NavigationDetailController{})
 	beego.Router("/sign_in", &controllers.SignInController{})
 
-	beego.Router("/stack/:name", &api.StackAPI{}, "put:Deploy;delete:Delete")
+	beego.Router("/stack/:name", &api.StackAPI{}, "post:Deploy;delete:Delete")
 	beego.Router("/stack/services", &api.StackAPI{}, "get:CheckServices")
-	beego.Router("/stacks", &api.StackAPI{}, "get:List")
-	beego.Router("/stack/log", &api.StackAPI{}, "get:Log")
+	beego.Router("/stacks", &api.StackAPI{}, "get:ListFromAPI")
+	beego.Router("/stack/log", &api.StackAPI{}, "get:GetServiceLog")
 
 }

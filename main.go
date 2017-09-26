@@ -2,6 +2,7 @@ package main
 
 import (
 	"mongo"
+	"os"
 	_ "routers"
 
 	"github.com/astaxie/beego"
@@ -31,6 +32,9 @@ func main() {
 	beego.AddTemplateExt("htm")
 
 	// dao.InitDatabase()
+
+	os.Setenv("DOCKER_HOST", "tcp://jin-onpremises:2376")
+	os.Setenv("DOCKER_CERT_PATH", "/Users/yjin/onpremises-test")
 
 	err := swarm.Initialize()
 	if err != nil {
