@@ -25,7 +25,7 @@ func main() {
 	beego.BConfig.WebConfig.Session.SessionProvider = "mongo"
 	beego.BConfig.WebConfig.Session.SessionProviderConfig = ""
 	beego.BConfig.WebConfig.Session.SessionName = "connect.sid"
-	beego.BConfig.WebConfig.Session.Secret = "stratus"
+	beego.BConfig.WebConfig.Session.SessionSecret = "stratus"
 	beego.BConfig.WebConfig.Session.SessionGCMaxLifetime = 3600
 	beego.BConfig.WebConfig.Session.SessionCookieLifeTime = 3600
 	beego.BConfig.WebConfig.Session.SessionDomain = ""
