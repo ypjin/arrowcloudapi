@@ -77,24 +77,26 @@ func (b *BaseAPI) DecodeJSONReqAndValidate(v interface{}) {
 }
 
 // ValidateUser checks if the request triggered by a valid user
-func (b *BaseAPI) ValidateUser() string {
+func (b *BaseAPI) ValidateUser() (string, *models.User) {
 	userID, needsCheck, ok := b.GetUserIDForRequest()
 	if !ok {
 		log.Warning("No user id in session, canceling request")
-		b.CustomAbort(http.StatusUnauthorized, "")
+		b.CustomAbort(http.StatusUnauthorized, "Please login first!")
 	}
+
+	var user *models.User
 	if needsCheck {
-		u, err := dao.GetUser(models.User{UserID: userID})
+		user, err := dao.GetUser(models.User{UserID: userID})
 		if err != nil {
 			log.Errorf("Error occurred in GetUser, error: %v", err)
 			b.CustomAbort(http.StatusInternalServerError, "Internal error.")
 		}
-		if u == nil {
+		if user == nil {
 			log.Warningf("User was deleted already, user id: %d, canceling request.", userID)
 			b.CustomAbort(http.StatusUnauthorized, "")
 		}
 	}
-	return userID
+	return userID, user
 }
 
 // GetUserIDForRequest tries to get user ID from basic auth header and session.
@@ -102,7 +104,7 @@ func (b *BaseAPI) ValidateUser() string {
 func (b *BaseAPI) GetUserIDForRequest() (string, bool, bool) {
 	username, password, ok := b.Ctx.Request.BasicAuth()
 	if ok {
-		log.Infof("Requst with Basic Authentication header, username: %s", username)
+		log.Infof("Request with Basic Authentication header, username: %s", username)
 		user, err := auth.Login(models.AuthModel{
 			Principal: username,
 			Password:  password,

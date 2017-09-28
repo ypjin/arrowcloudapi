@@ -24,7 +24,8 @@ func main() {
 	beego.BConfig.WebConfig.Session.SessionOn = true
 	beego.BConfig.WebConfig.Session.SessionProvider = "mongo"
 	beego.BConfig.WebConfig.Session.SessionProviderConfig = ""
-	beego.BConfig.WebConfig.Session.SessionName = "beegosessionID"
+	beego.BConfig.WebConfig.Session.SessionName = "connect.sid"
+	beego.BConfig.WebConfig.Session.Secret = "stratus"
 	beego.BConfig.WebConfig.Session.SessionGCMaxLifetime = 3600
 	beego.BConfig.WebConfig.Session.SessionCookieLifeTime = 3600
 	beego.BConfig.WebConfig.Session.SessionDomain = ""
@@ -44,9 +45,11 @@ func main() {
 	_, err = docker.ListNodes()
 
 	dbOpts := map[string]string{
-		"hostname": "localhost",
-		"port":     "27017",
+		"hostname": "176.34.6.8",
+		"port":     "60001",
 		"dbname":   "arrowcloud",
+		"username": "appcelerator",
+		"password": "a5rSFu8RWDAP0jfc",
 	}
 
 	err = mongo.Initialize(dbOpts)

@@ -88,7 +88,8 @@ func (rs *MongoSessionStore) SessionRelease(w http.ResponseWriter) {
 		return
 	}
 
-	expires := int64((time.Now().Unix() + rs.maxlifetime) * 1000) //milliseconds
+	expires := time.Now().Add(time.Duration(rs.maxlifetime) * time.Second)
+	//int64((time.Now().Unix() + rs.maxlifetime) * 1000) //milliseconds
 
 	_, err = mongo.UpsertDocument(SESSION_COLLECTION,
 		bson.M{
@@ -163,12 +164,13 @@ func (rp *Provider) SessionRead(sid string) (session.Store, error) {
 	*/
 
 	kvs := make(map[interface{}]interface{})
-	expires := int64((time.Now().Unix() + rp.maxlifetime) * 1000) //for new session
+	expires := time.Now().Add(time.Duration(rp.maxlifetime) * time.Second)
+	//int64((time.Now().Unix() + rp.maxlifetime) * 1000) //for new session
 
 	query := bson.M{
 		"_id": sid,
 		"expires": bson.M{
-			"$gte": int64(time.Now().Unix() * 1000),
+			"$gte": time.Now(),
 		},
 	}
 
@@ -246,7 +248,7 @@ func (rp *Provider) SessionGC() {
 
 	query := bson.M{
 		"expires": bson.M{
-			"$lt": int64(time.Now().Unix() * 1000),
+			"$lt": time.Now(), //int64(time.Now().Unix() * 1000),
 		},
 	}
 
@@ -263,7 +265,7 @@ func (rp *Provider) SessionAll() int {
 	return 0
 }
 
-func saveSession(sid string, values map[interface{}]interface{}, expires int64) error {
+func saveSession(sid string, values map[interface{}]interface{}, expires time.Time) error {
 
 	strValues, err := convertValues(values)
 	if err != nil {

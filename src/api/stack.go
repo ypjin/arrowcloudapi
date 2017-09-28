@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"models"
 	"net/http"
 	"regexp"
 	"service/swarm"
@@ -18,9 +19,10 @@ GET /stack/log?<query>		acs stack log
 */
 type StackAPI struct {
 	BaseAPI
-	userID    string
-	stackID   string
-	stackName string
+	userID string
+	user   *models.User
+	// stackID   string
+	// stackName string
 }
 
 type stackReq struct {
@@ -32,25 +34,25 @@ const stackNameMaxLen int = 30
 const stackNameMinLen int = 4
 const dupStackPattern = `Duplicate entry '\w+' for key 'name'`
 
-// func (p *StackAPI) Prepare() {
+func (p *StackAPI) Prepare() {
 
-// 	p.userID = p.ValidateUser()
+	p.userID, p.user = p.ValidateUser()
 
-// 	nameStr := p.Ctx.Input.Param(":name") //stack name
-// 	if len(nameStr) > 0 {
-// 		p.stackName = nameStr
+	// nameStr := p.Ctx.Input.Param(":name") //stack name
+	// if len(nameStr) > 0 {
+	// 	p.stackName = nameStr
 
-// 		stack, err := dao.GetStack(p.stackID)
-// 		if err != nil {
-// 			log.Errorf("failed to get stack %d: %v", p.stackName, err)
-// 			p.CustomAbort(http.StatusInternalServerError, "Internal error.")
-// 		}
-// 		if stack == nil {
-// 			p.CustomAbort(http.StatusNotFound, fmt.Sprintf("stack %s does not exist.", p.stackName))
-// 		}
-// 		p.stackID = stack.StackID
-// 	}
-// }
+	// 	stack, err := dao.GetStack(p.stackID)
+	// 	if err != nil {
+	// 		log.Errorf("failed to get stack %d: %v", p.stackName, err)
+	// 		p.CustomAbort(http.StatusInternalServerError, "Internal error.")
+	// 	}
+	// 	if stack == nil {
+	// 		p.CustomAbort(http.StatusNotFound, fmt.Sprintf("stack %s does not exist.", p.stackName))
+	// 	}
+	// 	p.stackID = stack.StackID
+	// }
+}
 
 // Deploy a stack with provided compose file
 

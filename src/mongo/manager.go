@@ -47,7 +47,7 @@ func Initialize(options map[string]string) (err error) {
 		// This is normal single mongodb
 		url_servers = hostname + ":" + port
 		url += url_servers
-		// url += ("/" + dbname)
+		url += ("/" + dbname)
 	}
 
 	log.Debugf("Mongo URL: %s", url)
