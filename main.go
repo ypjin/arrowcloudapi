@@ -1,18 +1,18 @@
 package main
 
 import (
-	"mongo"
+	"arrowcloudapi/mongo"
+	_ "arrowcloudapi/routers"
 	"os"
-	_ "routers"
 
 	"github.com/astaxie/beego"
 	"gopkg.in/mgo.v2/bson"
 
-	"service/swarm"
-	"service/swarm/docker"
+	"arrowcloudapi/service/swarm"
+	"arrowcloudapi/service/swarm/docker"
 
-	_ "beego_ext"
-	"utils/log"
+	_ "arrowcloudapi/beego_ext"
+	"arrowcloudapi/utils/log"
 )
 
 func main() {
