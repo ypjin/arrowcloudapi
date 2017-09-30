@@ -89,6 +89,7 @@ type SessionConfig struct {
 	SessionOn               bool
 	SessionProvider         string
 	SessionName             string
+	SessionSecret           string
 	SessionGCMaxLifetime    int64
 	SessionProviderConfig   string
 	SessionCookieLifeTime   int

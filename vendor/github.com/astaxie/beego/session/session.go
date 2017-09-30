@@ -28,7 +28,10 @@
 package session
 
 import (
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -38,6 +41,8 @@ import (
 	"net/textproto"
 	"net/url"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 )
 
@@ -84,6 +89,7 @@ func Register(name string, provide Provider) {
 type ManagerConfig struct {
 	CookieName              string `json:"cookieName"`
 	EnableSetCookie         bool   `json:"enableSetCookie,omitempty"`
+	Secret                  string `json:"secret"`
 	Gclifetime              int64  `json:"gclifetime"`
 	Maxlifetime             int64  `json:"maxLifetime"`
 	Secure                  bool   `json:"secure"`
@@ -183,7 +189,17 @@ func (manager *Manager) getSid(r *http.Request) (string, error) {
 	}
 
 	// HTTP Request contains cookie for sessionid info.
-	return url.QueryUnescape(cookie.Value)
+	// return url.QueryUnescape(cookie.Value)
+
+	// To be able to share session and cookie with Stratus it needs to use the same algorithm for
+	// generating / parsing cookie string
+	// https://github.com/expressjs/session/blob/master/index.js#L525
+	// https://github.com/tj/node-cookie-signature
+	urlDecoded, err := url.QueryUnescape(cookie.Value)
+	if err != nil {
+		return "", err
+	}
+	return unsignSessionID(urlDecoded, manager.config.Secret), nil
 }
 
 // SessionStart generate or read the session id from http request.
@@ -208,9 +224,16 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	if err != nil {
 		return nil, errs
 	}
+
+	// To be able to share session and cookie with Stratus it needs to use the same algorithm for
+	// generating / parsing cookie string
+	// https://github.com/expressjs/session/blob/master/index.js#L635
+	// https://github.com/tj/node-cookie-signature
+
 	cookie := &http.Cookie{
-		Name:     manager.config.CookieName,
-		Value:    url.QueryEscape(sid),
+		Name: manager.config.CookieName,
+		// Value:    url.QueryEscape(sid),
+		Value:    url.QueryEscape(signSessionID(sid, manager.config.Secret)),
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   manager.isSecure(r),
@@ -356,4 +379,49 @@ func NewSessionLog(out io.Writer) *Log {
 	sl := new(Log)
 	sl.Logger = log.New(out, "[SESSION]", 1e9)
 	return sl
+}
+
+// sign session ID for set cookie
+// https://github.com/expressjs/session/blob/master/index.js#L634
+func signSessionID(sid, secret string) string {
+	return "s:" + sid + "." + hashSessionID(sid, secret)
+}
+
+// This actually verifies the session ID from cookie
+// signed session id from cookie looks like:
+// s:FcLdqhSWA29y4JhyiHn4rhJ3bZ_GLuTt.s/INCWYNqDc4ziAx+t+La9+QSuGjnTglvJIhtmMXuUs
+// https://github.com/tj/node-cookie-signature/blob/master/index.js#L36
+func unsignSessionID(signedSid, secret string) string {
+	dotIndex := strings.LastIndex(signedSid, ".")
+	sid := signedSid[2:dotIndex]
+	hash := signedSid[dotIndex+1:]
+
+	fmt.Println("sid", sid)
+	fmt.Println("secret", secret)
+	fmt.Println("hash", hash)
+	fmt.Println("calculated:", hashSessionID(sid, secret))
+
+	if hashSessionID(sid, secret) == hash {
+		fmt.Println("session unsigned")
+		return sid
+	} else {
+		fmt.Println("failed to unsign session")
+		return ""
+	}
+}
+
+// generate hash from session ID
+// https://github.com/tj/node-cookie-signature/blob/master/index.js#L16
+func hashSessionID(sid, secret string) string {
+
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(sid))
+	hashValue := mac.Sum(nil)
+
+	encoded := base64.StdEncoding.EncodeToString(hashValue)
+	re := regexp.MustCompile("=+$")
+
+	result := re.ReplaceAllString(string(encoded), "")
+
+	return result
 }

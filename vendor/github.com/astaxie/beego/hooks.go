@@ -48,6 +48,7 @@ func registerSession() error {
 		conf := new(session.ManagerConfig)
 		if sessionConfig == "" {
 			conf.CookieName = BConfig.WebConfig.Session.SessionName
+			conf.Secret = BConfig.WebConfig.Session.SessionSecret
 			conf.EnableSetCookie = BConfig.WebConfig.Session.SessionAutoSetCookie
 			conf.Gclifetime = BConfig.WebConfig.Session.SessionGCMaxLifetime
 			conf.Secure = BConfig.Listen.EnableHTTPS
