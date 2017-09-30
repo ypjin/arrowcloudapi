@@ -67,6 +67,30 @@
 			"Rev": "e9308947f407a24aaa1e7dbe35a01931e99cb255"
 		},
 		{
+			"ImportPath": "github.com/docker/cli/cli/compose/interpolation",
+			"Rev": "b75be206d0a8368b2c79d7ad5d0a93f9faada3ff"
+		},
+		{
+			"ImportPath": "github.com/docker/cli/cli/compose/loader",
+			"Rev": "b75be206d0a8368b2c79d7ad5d0a93f9faada3ff"
+		},
+		{
+			"ImportPath": "github.com/docker/cli/cli/compose/schema",
+			"Rev": "b75be206d0a8368b2c79d7ad5d0a93f9faada3ff"
+		},
+		{
+			"ImportPath": "github.com/docker/cli/cli/compose/template",
+			"Rev": "b75be206d0a8368b2c79d7ad5d0a93f9faada3ff"
+		},
+		{
+			"ImportPath": "github.com/docker/cli/cli/compose/types",
+			"Rev": "b75be206d0a8368b2c79d7ad5d0a93f9faada3ff"
+		},
+		{
+			"ImportPath": "github.com/docker/cli/opts",
+			"Rev": "b75be206d0a8368b2c79d7ad5d0a93f9faada3ff"
+		},
+		{
 			"ImportPath": "github.com/docker/distribution/digestset",
 			"Comment": "v2.6.0-rc.1-224-g5db89f0c",
 			"Rev": "5db89f0ca68677abc5eefce8f2a0a772c98ba52d"
@@ -196,9 +220,18 @@
 			"Rev": "b69c9e648a2529c8d7b927ba7f87bc7fe0b3b0ea"
 		},
 		{
+			"ImportPath": "github.com/mattn/go-shellwords",
+			"Comment": "v1.0.3-11-g95c860c",
+			"Rev": "95c860c1895b21b58903abdd1d9c591560b0601c"
+		},
+		{
 			"ImportPath": "github.com/mattn/go-sqlite3",
 			"Comment": "v1.2.0-124-g5160b48",
 			"Rev": "5160b48509cf5c877bc22c11c373f8c7738cdb38"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/mapstructure",
+			"Rev": "d0303fe809921458f417bcf828397a65db30a7e4"
 		},
 		{
 			"ImportPath": "github.com/opencontainers/go-digest",
@@ -221,7 +254,28 @@
 			"Rev": "0bc61eb85b3cab5d83c9432263916d5df58d9855"
 		},
 		{
+			"ImportPath": "github.com/sirupsen/logrus",
+			"Comment": "v0.8.7-45-gba3ef66",
+			"Rev": "ba3ef6695126a2d33fd0445ab8e0a1dc3f65be3f"
+		},
+		{
+			"ImportPath": "github.com/xeipuuv/gojsonpointer",
+			"Rev": "6fe8760cad3569743d51ddbb243b26f8456742dc"
+		},
+		{
+			"ImportPath": "github.com/xeipuuv/gojsonreference",
+			"Rev": "e02fc20de94c78484cd5ffb007f8af96be030a45"
+		},
+		{
+			"ImportPath": "github.com/xeipuuv/gojsonschema",
+			"Rev": "8a8cc2c7e54a04b1c6701f5ea67b23686c66712f"
+		},
+		{
 			"ImportPath": "golang.org/x/crypto/pbkdf2",
+			"Rev": "76eec36fa14229c4b25bb894c2d0e591527af429"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ssh/terminal",
 			"Rev": "76eec36fa14229c4b25bb894c2d0e591527af429"
 		},
 		{
@@ -235,6 +289,10 @@
 		{
 			"ImportPath": "golang.org/x/net/proxy",
 			"Rev": "0a9397675ba34b2845f758fe3cd68828369c6517"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "314a259e304ff91bd6985da2a7149bbf91237993"
 		},
 		{
 			"ImportPath": "golang.org/x/sys/windows",
@@ -264,6 +322,10 @@
 			"ImportPath": "gopkg.in/mgo.v2/internal/scram",
 			"Comment": "r2016.08.01-5-g3f83fa5",
 			"Rev": "3f83fa5005286a7fe593b055f0d7771a7dce4655"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "a5b47d31c556af34a302ce5d659e6fea44d90de0"
 		}
 	]
 }
