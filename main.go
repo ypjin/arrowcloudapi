@@ -12,6 +12,7 @@ import (
 	"arrowcloudapi/service/swarm/docker"
 
 	_ "arrowcloudapi/beego_ext"
+	_ "arrowcloudapi/service/swarm/compose/validator"
 	"arrowcloudapi/utils/log"
 )
 

@@ -3,8 +3,12 @@ package utils
 import (
 	"arrowcloudapi/utils/log"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"math/rand"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -76,4 +80,31 @@ func PrettyPrintObject(obj interface{}) (err error) {
 
 	log.Debug(objJson2.StringIndent("", "  "))
 	return
+}
+
+func PrettyPrint(v interface{}) {
+	b, _ := json.MarshalIndent(v, "", "  ")
+	log.Debug(string(b))
+}
+
+func SaveFile(fileName string, byteData []byte) error {
+
+	parentDir := filepath.Dir(fileName)
+	_, err := os.Stat(parentDir)
+	if err != nil {
+		err := os.MkdirAll(parentDir, 0777)
+		if err != nil {
+			return err
+		}
+	}
+
+	fo, err := os.Create(fileName)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to create file %v, %v", fileName, err))
+	}
+	if _, err := fo.Write(byteData); err != nil {
+		return errors.New(fmt.Sprintf("Failed to save file, %v", err))
+	}
+
+	return nil
 }

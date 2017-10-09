@@ -1,6 +1,7 @@
 package swarm
 
 import (
+	"arrowcloudapi/service/swarm/compose"
 	"arrowcloudapi/service/swarm/docker"
 	"arrowcloudapi/utils/log"
 )
@@ -25,6 +26,12 @@ func ListStacksFromAPI() (map[string]int, error) {
 
 // Deploy a stack by calling "docker stack deploy" command
 func DeployStack(stackName, composeFile string) (output string, err error) {
+
+	_, err = compose.Validate(composeFile)
+	if err != nil {
+		log.Errorf("Failed to verify the compose file. %v", err)
+		return
+	}
 
 	output, err = execStackCommand("deploy", "-c", composeFile, stackName)
 

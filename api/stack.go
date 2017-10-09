@@ -152,7 +152,7 @@ func (p *StackAPI) Deploy() {
 // Delete a stack
 func (p *StackAPI) Delete() {
 
-	stackName := p.Ctx.Input.Param(":stackname") //stack name
+	stackName := p.Ctx.Input.Param(":name") //stack name
 	log.Debugf("Stack name is %s", stackName)
 
 	output, err := swarm.RemoveStack(stackName)
