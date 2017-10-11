@@ -9,8 +9,8 @@ import (
 	"github.com/docker/cli/cli/compose/loader"
 	composetypes "github.com/docker/cli/cli/compose/types"
 	"github.com/pkg/errors"
-	yaml "gopkg.in/yaml.v2"
 
+	"arrowcloudapi/utils"
 	"arrowcloudapi/utils/log"
 )
 
@@ -19,7 +19,7 @@ var (
 )
 
 type Validator interface {
-	Validate(stackConfig *composetypes.Config, yamlMap *map[string]interface{}) error
+	Validate(stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error
 	Name() string
 }
 
@@ -28,7 +28,7 @@ func RegisterValidator(v Validator) {
 }
 
 // https://github.com/docker/cli/blob/master/cli/command/stack/deploy.go#L23
-func Validate(composefile string) (*composetypes.Config, error) {
+func Validate(composefile string) (*map[string]interface{}, []error) {
 
 	log.Debugf("about to verify compose file: %s", composefile)
 
@@ -36,7 +36,7 @@ func Validate(composefile string) (*composetypes.Config, error) {
 	// https://github.com/docker/cli/blob/master/cli/compose/types/types.go#L57
 	configDetails, err := getConfigDetails(composefile)
 	if err != nil {
-		return nil, err
+		return nil, []error{err}
 	}
 
 	// composetypes.Config
@@ -52,7 +52,7 @@ func Validate(composefile string) (*composetypes.Config, error) {
 	*/
 	config, err := loader.Load(configDetails)
 	if err != nil {
-		return nil, err
+		return nil, []error{err}
 	}
 
 	//utils.PrettyPrint(config)
@@ -61,27 +61,25 @@ func Validate(composefile string) (*composetypes.Config, error) {
 	// map[string]interface{}
 	configYaml := configDetails.ConfigFiles[0].Config
 
-	// utils.PrettyPrint(configYaml)
+	utils.PrettyPrint(configYaml)
 
 	// run validators (transformers)
-	for name, v := range validators {
-		err = v.Validate(config, &configYaml)
-		if err != nil {
-			log.Errorf("validator %s error: %v", name, err)
-			return nil, err
+	allValidationErrs := []error{}
+	for _, v := range validators {
+		errs := v.Validate(config, &configYaml)
+		if errs != nil && len(errs) > 0 {
+			allValidationErrs = append(allValidationErrs, errs...)
 		}
 	}
 
-	var yamlBytes []byte
-	yamlBytes, err = yaml.Marshal(configYaml)
-	if err != nil {
-		return nil, err
+	if allValidationErrs != nil && len(allValidationErrs) > 0 {
+		log.Errorf("validation errors: %v", allValidationErrs)
+		return nil, allValidationErrs
 	}
 
-	err = ioutil.WriteFile("/Users/yjin/aaa.yaml", yamlBytes, os.FileMode(0644))
+	utils.PrettyPrint(configYaml)
 
-	return config, err
-
+	return &configYaml, []error{}
 }
 
 // https://github.com/docker/cli/blob/master/cli/command/stack/deploy_composefile.go#L122

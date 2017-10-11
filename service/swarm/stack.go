@@ -4,6 +4,11 @@ import (
 	"arrowcloudapi/service/swarm/compose"
 	"arrowcloudapi/service/swarm/docker"
 	"arrowcloudapi/utils/log"
+	"errors"
+	"io/ioutil"
+	"os"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 // List stacks by running "docker stack ls" command
@@ -27,16 +32,36 @@ func ListStacksFromAPI() (map[string]int, error) {
 // Deploy a stack by calling "docker stack deploy" command
 func DeployStack(stackName, composeFile string) (output string, err error) {
 
-	_, err = compose.Validate(composeFile)
-	if err != nil {
-		log.Errorf("Failed to verify the compose file. %v", err)
+	// *map[string]interface{}
+	transformedConfigYaml, errs := compose.Validate(composeFile)
+	if errs != nil && len(errs) > 0 {
+		log.Errorf("Failed to verify the compose file. %v", errs)
+
+		errMsg := ""
+		for _, e := range errs {
+			errMsg += (e.Error() + "\n")
+		}
+
+		err = errors.New(errMsg)
 		return
 	}
 
-	output, err = execStackCommand("deploy", "-c", composeFile, stackName)
+	var yamlBytes []byte
+	yamlBytes, err = yaml.Marshal(transformedConfigYaml)
+	if err != nil {
+		return
+	}
+
+	transformedComposeFile := "/Users/yjin/aaa.yaml"
+	err = ioutil.WriteFile(transformedComposeFile, yamlBytes, os.FileMode(0644))
+	if err != nil {
+		return
+	}
+
+	output, err = execStackCommand("deploy", "-c", transformedComposeFile, stackName)
 
 	if err != nil {
-		log.Errorf("Failed to exec 'docker stack deploy with compose file %s'. %v", composeFile, err)
+		log.Errorf("Failed to exec 'docker stack deploy with compose file %s'. %v", transformedComposeFile, err)
 	}
 
 	return

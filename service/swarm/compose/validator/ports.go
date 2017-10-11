@@ -30,9 +30,11 @@ func (pv *PortsValidator) Name() string {
   For the first option, the compose file needs to be updated to remove publish ports in port definitions. We could
   not use the publish ports user defined directly because there may be conficts with other services's ports.
 */
-func (pv *PortsValidator) Validate(stackConfig *composetypes.Config, yamlMap *map[string]interface{}) error {
+func (pv *PortsValidator) Validate(stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error {
 
 	log.Debug("ports validator is about to validate...")
+
+	errs := []error{}
 
 	for _, service := range stackConfig.Services {
 
@@ -49,5 +51,5 @@ func (pv *PortsValidator) Validate(stackConfig *composetypes.Config, yamlMap *ma
 
 	}
 
-	return nil
+	return errs
 }

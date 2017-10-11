@@ -105,7 +105,7 @@ func (p *StackAPI) Deploy() {
 	output, err := swarm.DeployStack(stackName, composeFile)
 	if err != nil {
 		log.Errorf("Deploy error: %v", err)
-		p.CustomAbort(http.StatusInternalServerError, "internal error")
+		p.CustomAbort(http.StatusInternalServerError, err.Error())
 	}
 
 	result := map[string]interface{}{
