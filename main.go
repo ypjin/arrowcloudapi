@@ -3,13 +3,19 @@ package main
 import (
 	"arrowcloudapi/mongo"
 	_ "arrowcloudapi/routers"
+	"arrowcloudapi/utils"
 	"os"
-
-	"github.com/astaxie/beego"
-	"gopkg.in/mgo.v2/bson"
 
 	"arrowcloudapi/service/swarm"
 	"arrowcloudapi/service/swarm/docker"
+
+	"github.com/astaxie/beego"
+	"github.com/docker/cli/cli/command"
+	cliflags "github.com/docker/cli/cli/flags"
+	"github.com/docker/docker/pkg/term"
+	"github.com/spf13/pflag"
+	"golang.org/x/net/context"
+	"gopkg.in/mgo.v2/bson"
 
 	_ "arrowcloudapi/beego_ext"
 	_ "arrowcloudapi/service/swarm/compose/validator"
@@ -35,10 +41,15 @@ func main() {
 
 	// dao.InitDatabase()
 
+	err := findSwarmManager()
+	if err != nil {
+		panic(err)
+	}
+
 	os.Setenv("DOCKER_HOST", "tcp://jin-onpremises:2376")
 	os.Setenv("DOCKER_CERT_PATH", "/Users/yjin/onpremises-test")
 
-	err := swarm.Initialize()
+	err = swarm.Initialize()
 	if err != nil {
 		panic(err)
 	}
@@ -85,4 +96,43 @@ func main() {
 	log.Infof("persion: %v", re)
 
 	beego.Run()
+}
+
+func findSwarmManager() error {
+
+	// https://github.com/docker/cli/blob/master/cmd/docker/docker.go#L165
+	// https://github.com/docker/cli/blob/master/cli/command/cli.go#L180
+	stdin, stdout, stderr := term.StdStreams()
+	dockerCli := command.NewDockerCli(stdin, stdout, stderr)
+
+	opts := cliflags.NewClientOptions()
+
+	flags := pflag.CommandLine
+	opts.Common.InstallFlags(flags)
+
+	dockerCli.Initialize(opts)
+
+	if dockerCli == nil {
+		log.Error("dockerCli is nil")
+		return nil
+	}
+
+	if dockerCli.Client() == nil {
+		log.Error("dockerCli.Client is nil")
+		return nil
+	}
+
+	info, err := dockerCli.Client().Info(context.Background())
+	if err != nil {
+		return err
+	}
+
+	utils.PrettyPrint(info)
+
+	// if !info.Swarm.ControlAvailable {
+	// 	return errors.New("this node is not a swarm manager. Use \"docker swarm init\" or \"docker swarm join\" to connect this node to swarm and try again")
+	// }
+
+	return nil
+
 }

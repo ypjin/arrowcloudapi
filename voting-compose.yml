@@ -5,6 +5,13 @@ services:
     image: redis:3.2-alpine
     ports:
       - "6379"
+      - "3000"
+      - "3000-3005"
+      - "9090-9091:8080-8081"
+      - "49100:22"
+      - "127.0.0.1:8001:8001"
+      - "127.0.0.1:5001-5010:5001-5010"
+      - "6060:6060/udp"
     networks:
       - voteapp
     deploy:
@@ -25,6 +32,8 @@ services:
     image: gaiadocker/example-voting-app-vote:good
     ports:
       - 6000:80
+    volumes:
+      - db-data:/var/lib/postgresql/data
     networks:
       - voteapp
     depends_on:
