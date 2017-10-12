@@ -4,7 +4,10 @@ import (
 	"arrowcloudapi/mongo"
 	_ "arrowcloudapi/routers"
 	"arrowcloudapi/utils"
+	"errors"
+	"fmt"
 	"os"
+	"strings"
 
 	"arrowcloudapi/service/swarm"
 	"arrowcloudapi/service/swarm/docker"
@@ -13,7 +16,7 @@ import (
 	"github.com/docker/cli/cli/command"
 	cliflags "github.com/docker/cli/cli/flags"
 	"github.com/docker/docker/pkg/term"
-	"github.com/spf13/pflag"
+	// "github.com/spf13/pflag"
 	"golang.org/x/net/context"
 	"gopkg.in/mgo.v2/bson"
 
@@ -41,10 +44,11 @@ func main() {
 
 	// dao.InitDatabase()
 
-	err := findSwarmManager()
+	managerIP, err := findSwarmManager()
 	if err != nil {
 		panic(err)
 	}
+	log.Infof("Found swarm manager: %s", managerIP)
 
 	os.Setenv("DOCKER_HOST", "tcp://jin-onpremises:2376")
 	os.Setenv("DOCKER_CERT_PATH", "/Users/yjin/onpremises-test")
@@ -98,7 +102,165 @@ func main() {
 	beego.Run()
 }
 
-func findSwarmManager() error {
+/*
+	result of "docker info"
+	{
+	  "ID": "XOW3:6EEW:4DJ3:CSZJ:44PY:LIAS:UGXH:C7LZ:Z5JF:TBAV:FDBG:EU6D",
+	  "Containers": 4,
+	  "ContainersRunning": 0,
+	  "ContainersPaused": 0,
+	  "ContainersStopped": 4,
+	  "Images": 1173,
+	  "Driver": "overlay2",
+	  "DriverStatus": [
+	    [
+	      "Backing Filesystem",
+	      "extfs"
+	    ],
+	    [
+	      "Supports d_type",
+	      "true"
+	    ],
+	    [
+	      "Native Overlay Diff",
+	      "true"
+	    ]
+	  ],
+	  "SystemStatus": null,
+	  "Plugins": {
+	    "Volume": [
+	      "local"
+	    ],
+	    "Network": [
+	      "bridge",
+	      "host",
+	      "macvlan",
+	      "null",
+	      "overlay"
+	    ],
+	    "Authorization": null,
+	    "Log": null
+	  },
+	  "MemoryLimit": true,
+	  "SwapLimit": false,
+	  "KernelMemory": true,
+	  "CpuCfsPeriod": true,
+	  "CpuCfsQuota": true,
+	  "CPUShares": true,
+	  "CPUSet": true,
+	  "IPv4Forwarding": true,
+	  "BridgeNfIptables": true,
+	  "BridgeNfIp6tables": true,
+	  "Debug": false,
+	  "NFd": 17,
+	  "OomKillDisable": true,
+	  "NGoroutines": 24,
+	  "SystemTime": "2017-10-12T05:12:17.270537733Z",
+	  "LoggingDriver": "json-file",
+	  "CgroupDriver": "cgroupfs",
+	  "NEventsListener": 0,
+	  "KernelVersion": "4.4.0-78-generic",
+	  "OperatingSystem": "Ubuntu 16.04.2 LTS",
+	  "OSType": "linux",
+	  "Architecture": "x86_64",
+	  "IndexServerAddress": "https://index.docker.io/v1/",
+	  "RegistryConfig": {
+	    "AllowNondistributableArtifactsCIDRs": null,
+	    "AllowNondistributableArtifactsHostnames": null,
+	    "InsecureRegistryCIDRs": [
+	      "127.0.0.0/8"
+	    ],
+	    "IndexConfigs": {
+	      "docker.io": {
+	        "Name": "docker.io",
+	        "Mirrors": null,
+	        "Secure": true,
+	        "Official": true
+	      },
+	      "registry.cloudapp.jin.com": {
+	        "Name": "registry.cloudapp.jin.com",
+	        "Mirrors": [],
+	        "Secure": false,
+	        "Official": false
+	      }
+	    },
+	    "Mirrors": []
+	  },
+	  "NCPU": 2,
+	  "MemTotal": 7841349632,
+	  "GenericResources": null,
+	  "DockerRootDir": "/var/lib/docker",
+	  "HttpProxy": "",
+	  "HttpsProxy": "",
+	  "NoProxy": "",
+	  "Name": "ip-10-187-138-122",
+	  "Labels": [
+	    "HOST_IP=172.30.0.247",
+	    "SSH_HOST_IP=13.112.198.7"
+	  ],
+	  "ExperimentalBuild": false,
+	  "ServerVersion": "1.13.0",
+	  "ClusterStore": "",
+	  "ClusterAdvertise": "",
+	  "Runtimes": {
+	    "runc": {
+	      "path": "docker-runc"
+	    }
+	  },
+	  "DefaultRuntime": "runc",
+
+	  "Swarm": {
+	    "NodeID": "",
+	    "NodeAddr": "",
+	    "LocalNodeState": "inactive",
+	    "ControlAvailable": false,
+	    "Error": "",
+	    "RemoteManagers": null,
+	    "Cluster": {
+	      "ID": "",
+	      "Version": {},
+	      "CreatedAt": "0001-01-01T00:00:00Z",
+	      "UpdatedAt": "0001-01-01T00:00:00Z",
+	      "Spec": {
+	        "Labels": null,
+	        "Orchestration": {},
+	        "Raft": {
+	          "ElectionTick": 0,
+	          "HeartbeatTick": 0
+	        },
+	        "Dispatcher": {},
+	        "CAConfig": {},
+	        "TaskDefaults": {},
+	        "EncryptionConfig": {
+	          "AutoLockManagers": false
+	        }
+	      },
+	      "TLSInfo": {},
+	      "RootRotationInProgress": false
+	    }
+	  },
+	  "LiveRestoreEnabled": false,
+	  "Isolation": "",
+	  "InitBinary": "docker-init",
+	  "ContainerdCommit": {
+	    "ID": "03e5862ec0d8d3b3f750e19fca3ee367e13c090e",
+	    "Expected": "03e5862ec0d8d3b3f750e19fca3ee367e13c090e"
+	  },
+	  "RuncCommit": {
+	    "ID": "2f7393a47307a16f8cee44a37b262e8b81021e3e",
+	    "Expected": "2f7393a47307a16f8cee44a37b262e8b81021e3e"
+	  },
+	  "InitCommit": {
+	    "ID": "949e6fa",
+	    "Expected": "949e6fa"
+	  },
+	  "SecurityOptions": [
+	    "name=apparmor",
+	    "name=seccomp,profile=default"
+	  ]
+	}
+*/
+func findSwarmManager() (managerIP string, err error) {
 
 	// https://github.com/docker/cli/blob/master/cmd/docker/docker.go#L165
 	// https://github.com/docker/cli/blob/master/cli/command/cli.go#L180
@@ -107,32 +269,53 @@ func findSwarmManager() error {
 
 	opts := cliflags.NewClientOptions()
 
-	flags := pflag.CommandLine
-	opts.Common.InstallFlags(flags)
+	// When it tried to connect to the docker daemon via ip:port there was an error regarding incorrect protocol.
+	// (http used for https reponse). The following code was for fixing it but it's not done.
+	// flags := pflag.CommandLine
+	// opts.Common.InstallFlags(flags)
 
 	dockerCli.Initialize(opts)
 
-	if dockerCli == nil {
-		log.Error("dockerCli is nil")
-		return nil
-	}
-
-	if dockerCli.Client() == nil {
-		log.Error("dockerCli.Client is nil")
-		return nil
-	}
-
-	info, err := dockerCli.Client().Info(context.Background())
+	dockerInfo, err := dockerCli.Client().Info(context.Background())
 	if err != nil {
-		return err
+		return
 	}
 
-	utils.PrettyPrint(info)
+	utils.PrettyPrint(dockerInfo)
+
+	if dockerInfo.Swarm.LocalNodeState == "inactive" {
+		errMsg := "Current node is not in a swarm."
+		log.Warning(errMsg)
+		err = errors.New(errMsg)
+		return
+	}
+
+	managers := dockerInfo.Swarm.RemoteManagers
+	if managers == nil || len(managers) == 0 {
+		errMsg := "no available swarm manager found"
+		log.Error(errMsg)
+		err = errors.New(errMsg)
+		return
+	}
+
+	// process the result
+	// [{"NodeID":"z9j7jebvibi4rdnfdtmi2arod","Addr":"10.35.159.51:2377"},{"NodeID":"wxdz6sgkwq4pxc3b7ws8rqjwo","Addr":"10.35.149.229:2377"},{"NodeID":"rttfonyon3piqybyrbuixakjt","Addr":"10.29.42.57:2377"}]
+	managerIPs := []string{}
+	for _, manager := range managers {
+		result := strings.Split(manager.Addr, ":")
+		ip := result[0]
+		managerIPs = append(managerIPs, ip)
+	}
+	availableManagerIP := managerIPs[0]
+
+	if availableManagerIP != "" {
+		return availableManagerIP, nil
+	} else {
+		err = errors.New(fmt.Sprintf("failed to find a swarm manager. managers: %v", managerIPs))
+		return
+	}
 
 	// if !info.Swarm.ControlAvailable {
 	// 	return errors.New("this node is not a swarm manager. Use \"docker swarm init\" or \"docker swarm join\" to connect this node to swarm and try again")
 	// }
-
-	return nil
-
 }
