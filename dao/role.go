@@ -36,14 +36,14 @@ func IsAdminRole(userInfo map[string]string) (bool, error) {
 	u := models.User{}
 
 	if userInfo["UserID"] != "" {
-		u.UserID = userInfo["UserID"]
+		u.ID = userInfo["UserID"]
 	} else if userInfo["Username"] != "" {
 		u.Username = userInfo["Username"]
 	} else {
 		return false, fmt.Errorf("invalid parameter, one of userID and Username is required: %v", userInfo)
 	}
 
-	if u.UserID == "" && len(u.Username) == 0 {
+	if u.ID == "" && len(u.Username) == 0 {
 		return false, nil
 	}
 

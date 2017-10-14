@@ -19,7 +19,7 @@ func (ndc *NavigationDetailController) Get() {
 	var isAdmin int
 	if sessionUserID != nil {
 		userID := sessionUserID.(string)
-		u, err := dao.GetUser(models.User{UserID: userID})
+		u, err := dao.GetUser(models.User{ID: userID})
 		if err != nil {
 			log.Errorf("Error occurred in GetUser, error: %v", err)
 			ndc.CustomAbort(http.StatusInternalServerError, "Internal error.")

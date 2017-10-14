@@ -176,7 +176,7 @@ func (d *Auth) Authenticate(m models.AuthModel) (*models.User, error) {
 	}
 
 	mUser := &models.User{
-		UserID:   savedUser["_id"].(bson.ObjectId).Hex(),
+		ID:       savedUser["_id"].(bson.ObjectId).Hex(),
 		Username: jsonBody.Path("result.username").Data().(string),
 		Email:    jsonBody.Path("result.email").Data().(string),
 		Orgs:     orgs,
@@ -351,12 +351,12 @@ func checkOrgs(orgArray []interface{}) (orgs []models.Org, haveAccess bool) {
 
 		orgDoc := orgData.(map[string]interface{})
 		orgToSave := models.Org{
-			Id:             strconv.FormatFloat(orgDoc["org_id"].(float64), 'f', -1, 64),
+			ID:             strconv.FormatFloat(orgDoc["org_id"].(float64), 'f', -1, 64),
 			Name:           orgDoc["name"].(string),
 			Admin:          orgDoc["current_users_role"].(string) == "admin",
 			Node_acs_admin: orgDoc["is_node_acs_admin"].(bool),
 		}
-		userOrgIds = append(userOrgIds, orgToSave.Id)
+		userOrgIds = append(userOrgIds, orgToSave.ID)
 
 		//check if the org has access to this domain (deployment)
 		//if yes save it in "orgs"
@@ -368,7 +368,7 @@ func checkOrgs(orgArray []interface{}) (orgs []models.Org, haveAccess bool) {
 				if hok {
 					re := regexp.MustCompile("^(http|https)://")
 					adminHost := re.ReplaceAllString(adminHost, "")
-					log.Debugf("org %s(%s) have access to %s", orgToSave.Name, orgToSave.Id, adminHost)
+					log.Debugf("org %s(%s) have access to %s", orgToSave.Name, orgToSave.ID, adminHost)
 					if adminHost == thisEnvHost {
 						orgs = append(orgs, orgToSave)
 						break

@@ -26,7 +26,7 @@ func (omc *OptionalMenuController) Get() {
 	if sessionUserID != nil {
 		hasLoggedIn = true
 		userID := sessionUserID.(string)
-		u, err := dao.GetUser(models.User{UserID: userID})
+		u, err := dao.GetUser(models.User{ID: userID})
 		if err != nil {
 			log.Errorf("Error occurred in GetUser, error: %v", err)
 			omc.CustomAbort(http.StatusInternalServerError, "Internal error.")

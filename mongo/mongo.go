@@ -30,6 +30,27 @@ func FindOneDocument(collectionPrefixedWithDB string, query bson.M) (result bson
 	return
 }
 
+func FindDocuments(collectionPrefixedWithDB string, query bson.M) (result []bson.M, err error) {
+
+	dBName, collectionName := getDBAndCollectionName(collectionPrefixedWithDB)
+
+	session := GetSession()
+	defer session.Close()
+
+	result = []bson.M{}
+
+	c := session.DB(dBName).C(collectionName)
+
+	//https://godoc.org/gopkg.in/mgo.v2#Collection.Find
+	err = c.Find(query).All(&result)
+
+	if err != nil {
+		log.Errorf("Query err: %v", err)
+	}
+
+	return
+}
+
 /*
   {
       "lastErrorObject": {

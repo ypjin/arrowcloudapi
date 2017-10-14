@@ -1,12 +1,15 @@
 package api
 
 import (
+	"arrowcloudapi/dao"
 	"arrowcloudapi/models"
+	"arrowcloudapi/service/entitlement"
 	"arrowcloudapi/service/swarm"
 	"arrowcloudapi/utils/log"
 	"fmt"
 	"net/http"
 	"regexp"
+	"time"
 )
 
 // StackAPI handles requests to the following APIs
@@ -65,9 +68,58 @@ func (p *StackAPI) Prepare() {
 func (p *StackAPI) Deploy() {
 
 	stackName := p.Ctx.Input.Param(":name") //stack name
+	orgId := p.GetString("orgid")
 
-	log.Debugf("Stack name is %s", stackName)
+	log.Debugf("stack name: %s, org id: %s", stackName, orgId)
 
+	// user must provide org id for the stack if he belongs to multiple orgs
+	if len(p.user.Orgs) > 1 && orgId == "" {
+		p.CustomAbort(http.StatusBadRequest, "Organization ID is required since you belong to more than one organization.")
+	}
+
+	// permission check
+	stack := models.Stack{}
+
+	if orgId != "" {
+		stack.OrgID = orgId
+		hasViewPermission, err := entitlement.CanView(*p.user, stack)
+		if err != nil {
+			p.CustomAbort(http.StatusInternalServerError, "internal error")
+		}
+		if !hasViewPermission {
+			p.CustomAbort(http.StatusUnauthorized, "no permission")
+		}
+	} else {
+		stack.OrgID = p.user.Orgs[0].ID
+	}
+
+	stacks, err := dao.GetStacks(*p.user, stack.OrgID, stackName, false)
+	if err != nil {
+		log.Errorf("failed to query stacks. %v", err)
+		p.CustomAbort(http.StatusInternalServerError, "internal error")
+	}
+
+	if len(*stacks) == 0 {
+		stack.UserID = p.user.ID
+		stack.Name = stackName
+		stack.CreationTime = time.Now()
+		stack.UpdateTime = time.Now()
+		stackID, err := dao.SaveStack(stack)
+		if err != nil {
+			log.Errorf("failed to save stack. %v", err)
+			p.CustomAbort(http.StatusInternalServerError, "internal error")
+		}
+		stack.ID = stackID
+	} else {
+		stack = (*stacks)[0]
+	}
+
+	hasUpdatePermission, err := entitlement.CanUpdate(*p.user, stack)
+	if !hasUpdatePermission {
+		p.CustomAbort(http.StatusUnauthorized, "no permission")
+	}
+
+	// do stack deployment
 	myField := p.GetString("my_field")
 	log.Debugf("myField: %s", myField)
 	//myBuffer := p.Get
@@ -241,6 +293,40 @@ func (p *StackAPI) List() {
 	// p.Data["json"] = stackList
 	// p.ServeJSON()
 
+	stackName := p.GetString("stackname")
+	orgId := p.GetString("orgid")
+	userOnly, err := p.GetBool("useronly")
+	if err != nil {
+		p.CustomAbort(http.StatusBadRequest, "useronly is invalid")
+	}
+
+	if orgId != "" {
+		hasPermission, err := entitlement.CanView(*p.user, models.Stack{OrgID: orgId})
+		if err != nil {
+			log.Errorf("check permission error: %v", err)
+			p.CustomAbort(http.StatusInternalServerError, "internal error")
+		}
+		if !hasPermission {
+			p.CustomAbort(http.StatusUnauthorized, "no permission")
+		}
+	}
+
+	// 1. get stacks from db
+	stacks, err := dao.GetStacks(*p.user, orgId, stackName, userOnly)
+	if err != nil {
+		p.CustomAbort(http.StatusInternalServerError, "internal error")
+	}
+
+	if len(*stacks) == 0 {
+		p.CustomAbort(http.StatusOK, "no stack found")
+	}
+
+	stackNames := []string{}
+	for _, stack := range *stacks {
+		stackNames = append(stackNames, stack.Name)
+	}
+
+	// 2. get stack detail from swarm
 	output, err := swarm.ListStacks()
 	if err != nil {
 		log.Errorf("ListStacks error: %v", err)

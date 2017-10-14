@@ -21,7 +21,7 @@ func (nhc *NavigationHeaderController) Get() {
 	if sessionUserID != nil {
 		hasLoggedIn = true
 		userID := sessionUserID.(string)
-		u, err := dao.GetUser(models.User{UserID: userID})
+		u, err := dao.GetUser(models.User{ID: userID})
 		if err != nil {
 			log.Errorf("Error occurred in GetUser, error: %v", err)
 			nhc.CustomAbort(http.StatusInternalServerError, "Internal error.")

@@ -3,7 +3,7 @@ package models
 import "time"
 
 type Org struct {
-	Id             string
+	ID             string
 	Name           string
 	Admin          bool
 	Node_acs_admin bool
@@ -11,7 +11,7 @@ type Org struct {
 
 // User holds the details of a user.
 type User struct {
-	UserID    string `orm:"pk;column(_id)" json:"user_id"`
+	ID        string `orm:"pk;column(_id)" json:"user_id"`
 	Username  string `orm:"column(username)" json:"username"`
 	Email     string `orm:"column(email)" json:"email"`
 	Firstname string `orm:"column(firstname)" json:"firstname"`

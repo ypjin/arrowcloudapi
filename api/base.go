@@ -86,7 +86,7 @@ func (b *BaseAPI) ValidateUser() (string, *models.User) {
 
 	var user *models.User
 	if needsCheck {
-		user, err := dao.GetUser(models.User{UserID: userID})
+		user, err := dao.GetUser(models.User{ID: userID})
 		if err != nil {
 			log.Errorf("Error occurred in GetUser, error: %v", err)
 			b.CustomAbort(http.StatusInternalServerError, "Internal error.")
@@ -115,7 +115,7 @@ func (b *BaseAPI) GetUserIDForRequest() (string, bool, bool) {
 		}
 		if user != nil {
 			// User login successfully no further check required.
-			return user.UserID, false, true
+			return user.ID, false, true
 		}
 	}
 	sessionUserID, ok := b.GetSession("userId").(string)

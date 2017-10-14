@@ -37,7 +37,7 @@ func (ac *AuthController) Login() {
 		ac.CustomAbort(http.StatusUnauthorized, "")
 	}
 
-	ac.SetSession("userId", user.UserID)
+	ac.SetSession("userId", user.ID)
 	ac.SetSession("username", user.Username)
 }
 

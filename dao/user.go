@@ -20,8 +20,8 @@ func GetUser(query models.User) (*models.User, error) {
 
 	dbQ := bson.M{}
 
-	if query.UserID != "" {
-		dbQ["_id"] = bson.ObjectIdHex(query.UserID)
+	if query.ID != "" {
+		dbQ["_id"] = bson.ObjectIdHex(query.ID)
 	}
 	if query.Username != "" {
 		dbQ["username"] = query.Username
@@ -34,7 +34,7 @@ func GetUser(query models.User) (*models.User, error) {
 	}
 
 	user := &models.User{
-		UserID:    result["_id"].(bson.ObjectId).Hex(),
+		ID:        result["_id"].(bson.ObjectId).Hex(),
 		Username:  result["username"].(string),
 		Email:     result["email"].(string),
 		Firstname: result["firstname"].(string),
@@ -59,7 +59,7 @@ func GetUser(query models.User) (*models.User, error) {
 	for _, mapOrg := range mapOrgs {
 		bsonMOrg := mapOrg.(bson.M)
 		org := models.Org{
-			Id:             bsonMOrg["id"].(string),
+			ID:             bsonMOrg["id"].(string),
 			Name:           bsonMOrg["name"].(string),
 			Admin:          bsonMOrg["admin"].(bool),
 			Node_acs_admin: bsonMOrg["node_acs_admin"].(bool),
@@ -148,9 +148,9 @@ func ChangeUserPassword(u models.User, oldPassword ...string) (err error) {
 	salt := utils.GenerateRandomString()
 	if len(oldPassword) == 0 {
 		//In some cases, it may no need to check old password, just as Linux change password policies.
-		r, err = o.Raw(`update user set password=?, salt=? where user_id=?`, utils.Encrypt(u.Password, salt), salt, u.UserID).Exec()
+		r, err = o.Raw(`update user set password=?, salt=? where user_id=?`, utils.Encrypt(u.Password, salt), salt, u.ID).Exec()
 	} else {
-		r, err = o.Raw(`update user set password=?, salt=? where user_id=? and password = ?`, utils.Encrypt(u.Password, salt), salt, u.UserID, utils.Encrypt(oldPassword[0], u.Salt)).Exec()
+		r, err = o.Raw(`update user set password=?, salt=? where user_id=? and password = ?`, utils.Encrypt(u.Password, salt), salt, u.ID, utils.Encrypt(oldPassword[0], u.Salt)).Exec()
 	}
 
 	if err != nil {
@@ -226,14 +226,14 @@ func DeleteUser(userID string) error {
 	o := GetOrmer()
 
 	user, err := GetUser(models.User{
-		UserID: userID,
+		ID: userID,
 	})
 	if err != nil {
 		return err
 	}
 
-	name := fmt.Sprintf("%s#%d", user.Username, user.UserID)
-	email := fmt.Sprintf("%s#%d", user.Email, user.UserID)
+	name := fmt.Sprintf("%s#%d", user.Username, user.ID)
+	email := fmt.Sprintf("%s#%d", user.Email, user.ID)
 
 	_, err = o.Raw(`update user 
 		set deleted = 1, username = ?, email = ?
