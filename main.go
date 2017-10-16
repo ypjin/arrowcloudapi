@@ -44,16 +44,16 @@ func main() {
 
 	// dao.InitDatabase()
 
-	managerIP, err := findSwarmManager()
-	if err != nil {
-		panic(err)
-	}
-	log.Infof("Found swarm manager: %s", managerIP)
+	// managerIP, err := findSwarmManager()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// log.Infof("Found swarm manager: %s", managerIP)
 
 	os.Setenv("DOCKER_HOST", "tcp://jin-onpremises:2376")
 	os.Setenv("DOCKER_CERT_PATH", "/Users/yjin/onpremises-test")
 
-	err = swarm.Initialize()
+	err := swarm.Initialize()
 	if err != nil {
 		panic(err)
 	}

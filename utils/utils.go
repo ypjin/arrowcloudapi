@@ -108,3 +108,26 @@ func SaveFile(fileName string, byteData []byte) error {
 
 	return nil
 }
+
+// Check if a exists in the provided list
+func StringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+func StringInSliceWithIndex(a string, list []string) (int, bool) {
+	for i, b := range list {
+		if b == a {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
+func RemoveElementInSlice(index int, list []string) []string {
+	return append(list[:index], list[index+1:]...)
+}

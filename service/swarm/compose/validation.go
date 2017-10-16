@@ -10,6 +10,7 @@ import (
 	composetypes "github.com/docker/cli/cli/compose/types"
 	"github.com/pkg/errors"
 
+	"arrowcloudapi/models"
 	"arrowcloudapi/utils"
 	"arrowcloudapi/utils/log"
 )
@@ -19,7 +20,7 @@ var (
 )
 
 type Validator interface {
-	Validate(stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error
+	Validate(stack models.Stack, stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error
 	Name() string
 }
 
@@ -28,7 +29,7 @@ func RegisterValidator(v Validator) {
 }
 
 // https://github.com/docker/cli/blob/master/cli/command/stack/deploy.go#L23
-func Validate(composefile string) (*map[string]interface{}, []error) {
+func Validate(stack models.Stack, composefile string) (*map[string]interface{}, []error) {
 
 	log.Debugf("about to verify compose file: %s", composefile)
 
@@ -66,7 +67,7 @@ func Validate(composefile string) (*map[string]interface{}, []error) {
 	// run validators (transformers)
 	allValidationErrs := []error{}
 	for _, v := range validators {
-		errs := v.Validate(config, &configYaml)
+		errs := v.Validate(stack, config, &configYaml)
 		if errs != nil && len(errs) > 0 {
 			allValidationErrs = append(allValidationErrs, errs...)
 		}

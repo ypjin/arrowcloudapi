@@ -1,6 +1,8 @@
 package swarm
 
 import (
+	"arrowcloudapi/dao"
+	"arrowcloudapi/models"
 	"arrowcloudapi/service/swarm/compose"
 	"arrowcloudapi/service/swarm/docker"
 	"arrowcloudapi/utils/log"
@@ -24,16 +26,16 @@ func ListStacks() (output string, err error) {
 }
 
 // List stacks by calling docker daemon API
-func ListStacksFromAPI() (map[string]int, error) {
+func ListStacksFromAPI(stackIds []string) (map[string]int, error) {
 
-	return docker.ListStacks()
+	return docker.ListStacks(stackIds)
 }
 
 // Deploy a stack by calling "docker stack deploy" command
-func DeployStack(stackName, composeFile string) (output string, err error) {
+func DeployStack(stack models.Stack, composeFile string) (output string, err error) {
 
 	// *map[string]interface{}
-	transformedConfigYaml, errs := compose.Validate(composeFile)
+	transformedConfigYaml, errs := compose.Validate(stack, composeFile)
 	if errs != nil && len(errs) > 0 {
 		log.Errorf("Failed to verify the compose file. %v", errs)
 
@@ -58,10 +60,16 @@ func DeployStack(stackName, composeFile string) (output string, err error) {
 		return
 	}
 
-	output, err = execStackCommand("deploy", "-c", transformedComposeFile, stackName)
+	output, err = execStackCommand("deploy", "-c", transformedComposeFile, stack.Name)
 
 	if err != nil {
 		log.Errorf("Failed to exec 'docker stack deploy with compose file %s'. %v", transformedComposeFile, err)
+	}
+
+	stack.ComposeFile = string(yamlBytes)
+	_, err = dao.SaveStack(stack)
+	if err != nil {
+		log.Errorf("Failed to update stack compose file to db. %v", err)
 	}
 
 	return

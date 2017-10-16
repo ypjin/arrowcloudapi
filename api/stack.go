@@ -154,7 +154,7 @@ func (p *StackAPI) Deploy() {
 
 	// p.Data["json"] = rr
 
-	output, err := swarm.DeployStack(stackName, composeFile)
+	output, err := swarm.DeployStack(stack, composeFile)
 	if err != nil {
 		log.Errorf("Deploy error: %v", err)
 		p.CustomAbort(http.StatusInternalServerError, err.Error())
@@ -205,15 +205,58 @@ func (p *StackAPI) Deploy() {
 func (p *StackAPI) Delete() {
 
 	stackName := p.Ctx.Input.Param(":name") //stack name
-	log.Debugf("Stack name is %s", stackName)
+	orgId := p.GetString("orgid")
+	log.Debugf("Stack name is %s, orgid is %s", stackName, orgId)
 
+	if len(p.user.Orgs) > 1 && orgId == "" {
+		p.CustomAbort(http.StatusBadRequest, "Organization ID is required since you belong to more than one organization.")
+	}
+
+	if orgId != "" {
+		hasPermission, err := entitlement.CanView(*p.user, models.Stack{OrgID: orgId})
+		if err != nil {
+			log.Errorf("check permission error: %v", err)
+			p.CustomAbort(http.StatusInternalServerError, "internal error")
+		}
+		if !hasPermission {
+			p.CustomAbort(http.StatusUnauthorized, "no permission")
+		}
+	}
+
+	// 1. get stacks from db
+	stacks, err := dao.GetStacks(*p.user, orgId, stackName, false)
+	if err != nil {
+		p.CustomAbort(http.StatusInternalServerError, "internal error")
+	}
+
+	if len(*stacks) == 0 {
+		log.Debug("no matched stack found from db.")
+		p.CustomAbort(http.StatusOK, "no stack found")
+	} else {
+		log.Debugf("number of matched stack found from db: %v", len(*stacks))
+	}
+
+	stack := (*stacks)[0]
+	hasUpdatePermission, err := entitlement.CanUpdate(*p.user, stack)
+	if !hasUpdatePermission {
+		p.CustomAbort(http.StatusUnauthorized, "no permission")
+	}
+
+	// 2. remove the stack from swarm
 	output, err := swarm.RemoveStack(stackName)
 	if err != nil {
-		log.Errorf("RemoveStack error: %v", err)
+		log.Errorf("swarm.RemoveStack error: %v", err)
 		p.CustomAbort(http.StatusInternalServerError, "internal error")
 	}
 
 	log.Debugf("data for response: %s", output)
+
+	// 3. remove the stack from db
+	err = dao.RemoveStack(stack.ID)
+	if err != nil {
+		log.Errorf("dao.RemoveStack error: %v", err)
+		p.CustomAbort(http.StatusInternalServerError, "internal error")
+	}
 
 	result := map[string]interface{}{
 		"success": true,
@@ -318,15 +361,40 @@ func (p *StackAPI) List() {
 	}
 
 	if len(*stacks) == 0 {
+		log.Debug("no matched stack found from db.")
 		p.CustomAbort(http.StatusOK, "no stack found")
+	} else {
+		log.Debugf("number of matched stack found from db: %v", len(*stacks))
 	}
 
-	stackNames := []string{}
+	stackIds := []string{}
 	for _, stack := range *stacks {
-		stackNames = append(stackNames, stack.Name)
+		stackIds = append(stackIds, stack.ID)
 	}
 
 	// 2. get stack detail from swarm
+	stacksFromSwarm, err := swarm.ListStacksFromAPI(stackIds)
+	if err != nil {
+		log.Errorf("ListStacks error: %v", err)
+		p.CustomAbort(http.StatusInternalServerError, "internal error")
+	}
+
+	log.Debugf("data for response: %v", stacksFromSwarm)
+
+	result := map[string]interface{}{
+		"success": true,
+		"data":    stacksFromSwarm,
+	}
+
+	p.Data["json"] = result
+
+	p.ServeJSON()
+
+}
+
+// List stacks by calling docker daemon API
+func (p *StackAPI) ListByCommand() {
+
 	output, err := swarm.ListStacks()
 	if err != nil {
 		log.Errorf("ListStacks error: %v", err)
@@ -338,27 +406,6 @@ func (p *StackAPI) List() {
 	result := map[string]interface{}{
 		"success": true,
 		"data":    output,
-	}
-
-	p.Data["json"] = result
-
-	p.ServeJSON()
-}
-
-// List stacks by calling docker daemon API
-func (p *StackAPI) ListFromAPI() {
-
-	stacks, err := swarm.ListStacksFromAPI()
-	if err != nil {
-		log.Errorf("ListStacks error: %v", err)
-		p.CustomAbort(http.StatusInternalServerError, "internal error")
-	}
-
-	log.Debugf("data for response: %v", stacks)
-
-	result := map[string]interface{}{
-		"success": true,
-		"data":    stacks,
 	}
 
 	p.Data["json"] = result
@@ -396,10 +443,40 @@ func (p *StackAPI) GetServiceLog() {
 func (p *StackAPI) CheckServices() {
 
 	stackName := p.GetString("stackname") //p.Ctx.Input.Param(":stackname") //stack name
+	orgId := p.GetString("orgid")
+	log.Debugf("Stack name is %s, orgid is %s", stackName, orgId)
 
-	log.Debugf("Stack name is %s", stackName)
+	if len(p.user.Orgs) > 1 && orgId == "" {
+		p.CustomAbort(http.StatusBadRequest, "Organization ID is required since you belong to more than one organization.")
+	}
 
-	output, err := swarm.CheckServices(stackName)
+	if orgId != "" {
+		hasPermission, err := entitlement.CanView(*p.user, models.Stack{OrgID: orgId})
+		if err != nil {
+			log.Errorf("check permission error: %v", err)
+			p.CustomAbort(http.StatusInternalServerError, "internal error")
+		}
+		if !hasPermission {
+			p.CustomAbort(http.StatusUnauthorized, "no permission")
+		}
+	}
+
+	// 1. get stacks from db
+	stacks, err := dao.GetStacks(*p.user, orgId, stackName, false)
+	if err != nil {
+		p.CustomAbort(http.StatusInternalServerError, "internal error")
+	}
+
+	if len(*stacks) == 0 {
+		log.Debug("no matched stack found from db.")
+		p.CustomAbort(http.StatusOK, "no stack found")
+	} else {
+		log.Debugf("number of matched stack found from db: %v", len(*stacks))
+	}
+
+	stack := (*stacks)[0]
+
+	output, err := swarm.CheckServices(stack.Name)
 	if err != nil {
 		log.Errorf("CheckServices error: %v", err)
 		p.CustomAbort(http.StatusInternalServerError, "internal error")

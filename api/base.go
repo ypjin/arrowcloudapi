@@ -85,8 +85,9 @@ func (b *BaseAPI) ValidateUser() (string, *models.User) {
 	}
 
 	var user *models.User
+	var err error
 	if needsCheck {
-		user, err := dao.GetUser(models.User{ID: userID})
+		user, err = dao.GetUser(models.User{ID: userID})
 		if err != nil {
 			log.Errorf("Error occurred in GetUser, error: %v", err)
 			b.CustomAbort(http.StatusInternalServerError, "Internal error.")
@@ -96,6 +97,7 @@ func (b *BaseAPI) ValidateUser() (string, *models.User) {
 			b.CustomAbort(http.StatusUnauthorized, "")
 		}
 	}
+
 	return userID, user
 }
 

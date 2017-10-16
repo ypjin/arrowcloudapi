@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"arrowcloudapi/models"
 	"arrowcloudapi/service/swarm/compose"
 	"arrowcloudapi/utils"
 	"arrowcloudapi/utils/log"
@@ -25,7 +26,7 @@ func (vv *VolumesValidator) Name() string {
  * a stack should have its own network
  * all services should be on the network
  */
-func (vv *VolumesValidator) Validate(stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error {
+func (vv *VolumesValidator) Validate(stack models.Stack, stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error {
 
 	log.Debug("volumes validator is about to validate...")
 

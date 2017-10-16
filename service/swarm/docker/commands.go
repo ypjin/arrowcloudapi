@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"arrowcloudapi/utils"
 	"arrowcloudapi/utils/log"
 
 	"github.com/docker/docker/api/types"
@@ -18,6 +19,7 @@ import (
 const (
 	// LabelNamespace is the label used to track stack resources
 	LabelNamespace = "com.docker.stack.namespace"
+	LabelStackId   = "com.axway.stack.id"
 )
 
 var (
@@ -62,20 +64,38 @@ func ListNodes() (nodes []swarm.Node, err error) {
 }
 
 // https://github.com/docker/cli/blob/master/cli/command/stack/list.go
-func ListStacks() (map[string]int, error) {
+func ListStacks(stackIds []string) (map[string]int, error) {
 
 	options := types.ServiceListOptions{}
 	options.Filters = getAllStacksFilter()
+
+	log.Debugf("stack filters: %v", options.Filters)
 
 	services, err := dockerClient.ServiceList(context.Background(), options)
 	if err != nil {
 		return nil, err
 	}
+	log.Debugf("number of services found: %v", len(services))
 
 	m := make(map[string]int)
 
 	for _, service := range services {
 		labels := service.Spec.Labels
+
+		// filter out services which don't belong to desired stacks
+		// "docker service ls" does not support "OR" for multiple filters.
+		// We have to do this here. Otherwise we could do something like below.
+		// 	for _, stackId := range stackIds {
+		//		options.Filters.Add("label", LabelStackId+"_"+stackId)
+		//  }
+		stackId, ok := labels[LabelStackId]
+		if !ok {
+			continue
+		}
+		if !utils.StringInSlice(stackId, stackIds) {
+			continue
+		}
+
 		name, ok := labels[LabelNamespace]
 		if !ok {
 			return nil, errors.Errorf("cannot get label %s for service %s",

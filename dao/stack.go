@@ -34,6 +34,15 @@ func GetStack(stackId string) (*models.Stack, error) {
 	return &stack, nil
 }
 
+func RemoveStack(stackId string) (err error) {
+
+	query := bson.M{
+		"_id": bson.ObjectIdHex(stackId),
+	}
+
+	return mongo.RemoveDocument(STACKS_COLLECTION, query)
+}
+
 /*
  * A case confusing user in the current single-service implementation.
  * * A user belongs to multiple organizations.
@@ -90,7 +99,7 @@ func GetStacks(user models.User, orgID string, stackName string, userOnly bool) 
 			ID:           stackM["_id"].(bson.ObjectId).Hex(),
 			Name:         stackM["name"].(string),
 			UserID:       stackM["user_id"].(bson.ObjectId).Hex(),
-			OrgID:        stackM["org_id"].(bson.ObjectId).Hex(),
+			OrgID:        stackM["org_id"].(string),
 			CreationTime: stackM["creation_time"].(time.Time),
 			UpdateTime:   stackM["update_time"].(time.Time),
 			ComposeFile:  stackM["compose_file"].(string),
@@ -105,7 +114,7 @@ func SaveStack(stack models.Stack) (string, error) {
 
 	update := bson.M{
 		"name":          stack.Name,
-		"user_id":       stack.UserID,
+		"user_id":       bson.ObjectIdHex(stack.UserID),
 		"org_id":        stack.OrgID,
 		"creation_time": stack.CreationTime,
 		"update_time":   stack.UpdateTime,
@@ -116,7 +125,7 @@ func SaveStack(stack models.Stack) (string, error) {
 	if stack.ID == "" {
 		query = bson.M{
 			"name":    stack.Name,
-			"user_id": stack.UserID,
+			"user_id": bson.ObjectIdHex(stack.UserID),
 			"org_id":  stack.OrgID,
 		}
 	} else {
