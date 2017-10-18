@@ -23,7 +23,7 @@ func execStackCommand(args ...string) (output string, err error) {
 
 func execDockerCommand(args ...string) (output string, err error) {
 
-	dockerCmdName := "docker"
+	dockerCmdName := "docker --tls"
 
 	log.Debugf("execute command: %s %v", dockerCmdName, args)
 
