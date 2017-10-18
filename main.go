@@ -52,7 +52,7 @@ func main() {
 
 	// managerIP := "jin-onpremises"
 
-	os.Setenv("DOCKER_HOST", managerIP)
+	os.Setenv("DOCKER_HOST", "tcp://"+managerIP+":2376")
 	os.Setenv("DOCKER_CERT_PATH", "/etc/docker-certs")
 
 	err = swarm.Initialize()
