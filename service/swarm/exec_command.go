@@ -65,7 +65,7 @@ func buildEnv() ([]string, error) {
 	kvs = append(kvs, "DOCKER_HOST="+hostSpec)
 	if certPath != "" {
 		kvs = append(kvs, "DOCKER_CERT_PATH="+certPath)
-		kvs = append(kvs, "DOCKER_TLS_VERIFY=1")
+		kvs = append(kvs, "DOCKER_TLS_VERIFY=0")
 	}
 
 	return kvs, nil
