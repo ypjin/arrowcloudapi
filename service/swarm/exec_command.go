@@ -9,21 +9,21 @@ import (
 
 func execServiceCommand(args ...string) (output string, err error) {
 
-	serviceCmdArgs := append([]string{"service"}, args...)
+	serviceCmdArgs := append([]string{"--tls", "service"}, args...)
 
 	return execDockerCommand(serviceCmdArgs...)
 }
 
 func execStackCommand(args ...string) (output string, err error) {
 
-	stackCmdArgs := append([]string{"stack"}, args...)
+	stackCmdArgs := append([]string{"--tls", "stack"}, args...)
 
 	return execDockerCommand(stackCmdArgs...)
 }
 
 func execDockerCommand(args ...string) (output string, err error) {
 
-	dockerCmdName := "docker --tls"
+	dockerCmdName := "docker"
 
 	log.Debugf("execute command: %s %v", dockerCmdName, args)
 
