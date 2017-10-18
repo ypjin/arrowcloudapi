@@ -2,11 +2,14 @@ package swarm
 
 import (
 	"arrowcloudapi/service/swarm/docker"
+	"os"
 )
 
 func Initialize() error {
 
-	host := docker.GetHostSpec("54.168.32.62")
+	host := os.Getenv("DOCKER_HOST")
+	hostSpec := docker.GetHostSpec(host)
+	certPath := os.Getenv("DOCKER_CERT_PATH")
 
-	return docker.InitDockerClient(host, "/Users/yjin/onpremises-test")
+	return docker.InitDockerClient(hostSpec, certPath)
 }

@@ -43,9 +43,6 @@ func getDatabase() (db Database, err error) {
 	case "", "mysql":
 		host, port, usr, pwd, database := getMySQLConnInfo()
 		db = NewMySQL(host, port, usr, pwd, database)
-	case "sqlite":
-		file := getSQLiteConnInfo()
-		db = NewSQLite(file)
 	default:
 		err = fmt.Errorf("invalid database: %s", os.Getenv("DATABASE"))
 	}
@@ -64,15 +61,6 @@ func getMySQLConnInfo() (host, port, username, password, database string) {
 		database = "registry"
 	}
 	return
-}
-
-// TODO read from config
-func getSQLiteConnInfo() string {
-	file := os.Getenv("SQLITE_FILE")
-	if len(file) == 0 {
-		file = "registry.db"
-	}
-	return file
 }
 
 var globalOrm orm.Ormer

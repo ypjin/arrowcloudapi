@@ -1,0 +1,19 @@
+appname = arrowcloudapi
+runmode = prod
+
+MONGO_HOSTS = mongo-primary,mongo-secondary
+MONGO_PORT = 27017
+MONGO_RSNAME = data
+MONGO_DBNAME = arrowcloud
+MONGO_USERNAME = appcelerator
+MONGO_PASSWORD = {{key "global/mongodb_password"}}
+
+[lang]
+types = en-US|zh-CN
+names = English|Chinese
+
+[dev]
+httpport = 8080
+
+[prod]
+httpport = 7100

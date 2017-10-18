@@ -44,16 +44,18 @@ func main() {
 
 	// dao.InitDatabase()
 
-	// managerIP, err := findSwarmManager()
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// log.Infof("Found swarm manager: %s", managerIP)
+	managerIP, err := findSwarmManager()
+	if err != nil {
+		panic(err)
+	}
+	log.Infof("Found swarm manager: %s", managerIP)
 
-	os.Setenv("DOCKER_HOST", "tcp://jin-onpremises:2376")
-	os.Setenv("DOCKER_CERT_PATH", "/Users/yjin/onpremises-test")
+	// managerIP := "jin-onpremises"
 
-	err := swarm.Initialize()
+	os.Setenv("DOCKER_HOST", managerIP)
+	os.Setenv("DOCKER_CERT_PATH", "/etc/docker-certs")
+
+	err = swarm.Initialize()
 	if err != nil {
 		panic(err)
 	}
@@ -61,11 +63,12 @@ func main() {
 	_, err = docker.ListNodes()
 
 	dbOpts := map[string]string{
-		"hostname": "176.34.6.8",
-		"port":     "60001",
-		"dbname":   "arrowcloud",
-		"username": "appcelerator",
-		"password": "a5rSFu8RWDAP0jfc",
+		"hostname": beego.AppConfig.String("MONGO_HOSTS"),
+		"port":     beego.AppConfig.String("MONGO_PORT"),
+		"rsname":   beego.AppConfig.String("MONGO_RSNAME"),
+		"dbname":   beego.AppConfig.String("MONGO_DBNAME"),
+		"username": beego.AppConfig.String("MONGO_USERNAME"),
+		"password": beego.AppConfig.String("MONGO_PASSWORD"),
 	}
 
 	err = mongo.Initialize(dbOpts)
