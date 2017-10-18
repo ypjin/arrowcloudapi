@@ -5,7 +5,6 @@ RUN mkdir /arrowcloudapi/conf
 RUN apk add --no-cache --update sed apr-util-ldap unzip curl bash
 
 
-
 # Add docker: https://github.com/docker-library/docker/blob/1c8b144ed9ec49ac8cc7ca75f8628fd8de6c82b5/1.11/Dockerfile
 
 RUN apk add --no-cache \
@@ -13,8 +12,8 @@ RUN apk add --no-cache \
     openssl
 
 ENV DOCKER_BUCKET get.docker.com
-ENV DOCKER_VERSION 17.10.0-ce
-ENV DOCKER_SHA256 c52cff62c4368a978b52e3d03819054d87bcd00d15514934ce2e0e09b99dd100
+ENV DOCKER_VERSION 17.09.0-ce
+ENV DOCKER_SHA256 a9e90a73c3cdfbf238f148e1ec0eaff5eb181f92f35bdd938fd7dab18e1c4647
 
 RUN set -x \
   && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-$DOCKER_VERSION.tgz" -o docker.tgz \
@@ -24,10 +23,6 @@ RUN set -x \
   && rmdir docker \
   && rm docker.tgz \
   && docker -v
-
-
-
-
 
 
 # Add Consul template
