@@ -4,6 +4,19 @@ RUN mkdir /arrowcloudapi/
 RUN mkdir /arrowcloudapi/conf
 RUN apk add --no-cache --update sed apr-util-ldap unzip curl bash
 
+ENV GLIBC_VERSION 2.25-r0
+
+# https://github.com/winfinit/mongodb-prebuilt/issues/35
+# https://github.com/jeanblanchard/docker-alpine-glibc/blob/master/Dockerfile
+# Download and install glibc
+RUN curl -Lo /etc/apk/keys/sgerrand.rsa.pub https://raw.githubusercontent.com/sgerrand/alpine-pkg-glibc/master/sgerrand.rsa.pub && \
+  curl -Lo glibc.apk "https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk" && \
+  curl -Lo glibc-bin.apk "https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-bin-${GLIBC_VERSION}.apk" && \
+  apk add glibc-bin.apk glibc.apk && \
+  /usr/glibc-compat/sbin/ldconfig /lib /usr/glibc-compat/lib && \
+  echo 'hosts: files mdns4_minimal [NOTFOUND=return] dns mdns4' >> /etc/nsswitch.conf && \
+  rm -rf glibc.apk glibc-bin.apk /var/cache/apk/*
+
 
 # Add docker: https://github.com/docker-library/docker/blob/1c8b144ed9ec49ac8cc7ca75f8628fd8de6c82b5/1.11/Dockerfile
 
