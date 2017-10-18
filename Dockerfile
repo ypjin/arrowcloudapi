@@ -8,6 +8,9 @@ RUN apk add --no-cache --update sed apr-util-ldap unzip curl bash
 
 # Add docker: https://github.com/docker-library/docker/blob/1c8b144ed9ec49ac8cc7ca75f8628fd8de6c82b5/1.11/Dockerfile
 
+RUN apk add --no-cache \
+    ca-certificates \
+    openssl
 
 ENV DOCKER_BUCKET get.docker.com
 ENV DOCKER_VERSION 17.10.0-ce
