@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/docker/cli/cli/compose/loader"
 	composetypes "github.com/docker/cli/cli/compose/types"
 	"github.com/pkg/errors"
@@ -29,13 +31,13 @@ func RegisterValidator(v Validator) {
 }
 
 // https://github.com/docker/cli/blob/master/cli/command/stack/deploy.go#L23
-func Validate(stack models.Stack, composefile string) (*map[string]interface{}, []error) {
+func Validate(stack *models.Stack, composeFile string) (*map[string]interface{}, []error) {
 
-	log.Debugf("about to verify compose file: %s", composefile)
+	log.Debugf("about to verify compose file: %s", composeFile)
 
 	// var details composetypes.ConfigDetails
 	// https://github.com/docker/cli/blob/master/cli/compose/types/types.go#L57
-	configDetails, err := getConfigDetails(composefile)
+	configDetails, err := getConfigDetails(composeFile)
 	if err != nil {
 		return nil, []error{err}
 	}
@@ -64,10 +66,17 @@ func Validate(stack models.Stack, composefile string) (*map[string]interface{}, 
 
 	utils.PrettyPrint(configYaml)
 
+	var yamlBytes []byte
+	yamlBytes, err = yaml.Marshal(configYaml)
+	if err != nil {
+		return nil, []error{err}
+	}
+	stack.OriginalComposeFile = string(yamlBytes)
+
 	// run validators (transformers)
 	allValidationErrs := []error{}
 	for _, v := range validators {
-		errs := v.Validate(stack, config, &configYaml)
+		errs := v.Validate(*stack, config, &configYaml)
 		if errs != nil && len(errs) > 0 {
 			allValidationErrs = append(allValidationErrs, errs...)
 		}
@@ -84,16 +93,16 @@ func Validate(stack models.Stack, composefile string) (*map[string]interface{}, 
 }
 
 // https://github.com/docker/cli/blob/master/cli/command/stack/deploy_composefile.go#L122
-func getConfigDetails(composefile string) (composetypes.ConfigDetails, error) {
+func getConfigDetails(composeFile string) (composetypes.ConfigDetails, error) {
 	var details composetypes.ConfigDetails
 
-	absPath, err := filepath.Abs(composefile)
+	absPath, err := filepath.Abs(composeFile)
 	if err != nil {
 		return details, err
 	}
 	details.WorkingDir = filepath.Dir(absPath)
 
-	configFile, err := getConfigFile(composefile)
+	configFile, err := getConfigFile(composeFile)
 	if err != nil {
 		return details, err
 	}

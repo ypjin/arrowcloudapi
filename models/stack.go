@@ -14,6 +14,7 @@ type Stack struct {
 	//UserID          int `json:"UserId"`
 	UserName string `orm:"-" json:"user_name"`
 
-	UpdateTime  time.Time `orm:"update_time" json:"update_time"`
-	ComposeFile string    `orm:"column(compose_file)" json:"compose_file"`
+	UpdateTime             time.Time `orm:"update_time" json:"update_time"`
+	OriginalComposeFile    string    `orm:"column(compose_file_original)" json:"compose_file_original"`
+	TransformedComposeFile string    `orm:"column(compose_file_transformed)" json:"compose_file_transformed"`
 }

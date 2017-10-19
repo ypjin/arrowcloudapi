@@ -22,13 +22,14 @@ func GetStack(stackId string) (*models.Stack, error) {
 	}
 
 	stack := models.Stack{
-		ID:           stackM["_id"].(bson.ObjectId).Hex(),
-		Name:         stackM["name"].(string),
-		UserID:       stackM["user_id"].(bson.ObjectId).Hex(),
-		OrgID:        stackM["org_id"].(bson.ObjectId).Hex(),
-		CreationTime: stackM["creation_time"].(time.Time),
-		UpdateTime:   stackM["update_time"].(time.Time),
-		ComposeFile:  stackM["compose_file"].(string),
+		ID:                     stackM["_id"].(bson.ObjectId).Hex(),
+		Name:                   stackM["name"].(string),
+		UserID:                 stackM["user_id"].(bson.ObjectId).Hex(),
+		OrgID:                  stackM["org_id"].(bson.ObjectId).Hex(),
+		CreationTime:           stackM["creation_time"].(time.Time),
+		UpdateTime:             stackM["update_time"].(time.Time),
+		OriginalComposeFile:    stackM["compose_file_original"].(string),
+		TransformedComposeFile: stackM["compose_file_transformed"].(string),
 	}
 
 	return &stack, nil
@@ -102,8 +103,14 @@ func GetStacks(user models.User, orgID string, stackName string, userOnly bool) 
 			OrgID:        stackM["org_id"].(string),
 			CreationTime: stackM["creation_time"].(time.Time),
 			UpdateTime:   stackM["update_time"].(time.Time),
-			ComposeFile:  stackM["compose_file"].(string),
 		}
+		if stackM["compose_file_original"] != nil {
+			stack.OriginalComposeFile = stackM["compose_file_original"].(string)
+		}
+		if stackM["compose_file_transformed"] != nil {
+			stack.TransformedComposeFile = stackM["compose_file_transformed"].(string)
+		}
+
 		stacks = append(stacks, stack)
 	}
 
@@ -113,12 +120,13 @@ func GetStacks(user models.User, orgID string, stackName string, userOnly bool) 
 func SaveStack(stack models.Stack) (string, error) {
 
 	update := bson.M{
-		"name":          stack.Name,
-		"user_id":       bson.ObjectIdHex(stack.UserID),
-		"org_id":        stack.OrgID,
-		"creation_time": stack.CreationTime,
-		"update_time":   stack.UpdateTime,
-		"compose_file":  stack.ComposeFile,
+		"name":                     stack.Name,
+		"user_id":                  bson.ObjectIdHex(stack.UserID),
+		"org_id":                   stack.OrgID,
+		"creation_time":            stack.CreationTime,
+		"update_time":              stack.UpdateTime,
+		"compose_file_original":    stack.OriginalComposeFile,
+		"compose_file_transformed": stack.TransformedComposeFile,
 	}
 
 	var query bson.M

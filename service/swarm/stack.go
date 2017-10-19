@@ -9,9 +9,17 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"time"
 
 	yaml "gopkg.in/yaml.v2"
 )
+
+var tmpFileDir string
+
+func init() {
+	tmpFileDir = filepath.Join(os.TempDir(), "composefiles")
+}
 
 // List stacks by running "docker stack ls" command
 func ListStacks() (output string, err error) {
@@ -35,7 +43,7 @@ func ListStacksFromAPI(stackIds []string) (map[string]int, error) {
 func DeployStack(stack models.Stack, composeFile string) (output string, err error) {
 
 	// *map[string]interface{}
-	transformedConfigYaml, errs := compose.Validate(stack, composeFile)
+	transformedConfigYaml, errs := compose.Validate(&stack, composeFile)
 	if errs != nil && len(errs) > 0 {
 		log.Errorf("Failed to verify the compose file. %v", errs)
 
@@ -54,7 +62,9 @@ func DeployStack(stack models.Stack, composeFile string) (output string, err err
 		return
 	}
 
-	transformedComposeFile := "/Users/yjin/aaa.yaml"
+	nowTag := time.Now().Format("20060102T150405Z")
+	transformedComposeFile := filepath.Join(tmpFileDir, stack.Name+"_transformed_"+nowTag+".yaml")
+
 	err = ioutil.WriteFile(transformedComposeFile, yamlBytes, os.FileMode(0644))
 	if err != nil {
 		return
@@ -66,7 +76,7 @@ func DeployStack(stack models.Stack, composeFile string) (output string, err err
 		log.Errorf("Failed to exec 'docker stack deploy with compose file %s'. %v", transformedComposeFile, err)
 	}
 
-	stack.ComposeFile = string(yamlBytes)
+	stack.TransformedComposeFile = string(yamlBytes)
 	_, err = dao.SaveStack(stack)
 	if err != nil {
 		log.Errorf("Failed to update stack compose file to db. %v", err)

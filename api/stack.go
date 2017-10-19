@@ -8,6 +8,8 @@ import (
 	"arrowcloudapi/utils/log"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"time"
 )
@@ -32,6 +34,8 @@ type stackReq struct {
 	StackName string `json:"stack_name"`
 	Public    int    `json:"public"`
 }
+
+var tmpFileDir string
 
 const stackNameMaxLen int = 30
 const stackNameMinLen int = 4
@@ -130,12 +134,16 @@ func (p *StackAPI) Deploy() {
 		p.CustomAbort(http.StatusInternalServerError, "internal error")
 	}
 
-	composeFile := "/Users/yjin/abc.yaml"
-
+	composeFile := ""
 	if file != nil {
 		// get the filename
 		fileName := header.Filename
-		log.Debugf("fileName: %v", fileName)
+
+		nowTag := time.Now().Format("20060102T150405Z")
+		composeFile = filepath.Join(tmpFileDir, stackName+"_"+nowTag+".yaml")
+
+		log.Debugf("uploaded file name: %s, composeFile: %v", fileName, composeFile)
+
 		// save to server
 		err := p.SaveToFile(stackName, composeFile)
 		if err != nil {
@@ -516,4 +524,16 @@ func isIllegalLength(s string, min int, max int) bool {
 		return (len(s) <= min)
 	}
 	return (len(s) < min || len(s) > max)
+}
+
+func init() {
+
+	tmpFileDir = filepath.Join(os.TempDir(), "composefiles")
+
+	if _, err := os.Stat(tmpFileDir); err != nil {
+		err := os.MkdirAll(tmpFileDir, 0777)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
