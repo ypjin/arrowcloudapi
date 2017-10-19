@@ -6,7 +6,7 @@ MONGO_PORT = 27017
 MONGO_RSNAME = data
 MONGO_DBNAME = arrowcloud
 MONGO_USERNAME = appcelerator
-MONGO_PASSWORD = {{key "global/mongodb_password"}}
+MONGO_PASSWORD = {{key "arrowcloud/mongodb/data/password"}}
 
 [lang]
 types = en-US|zh-CN
