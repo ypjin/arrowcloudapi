@@ -2,17 +2,13 @@ package validator
 
 import (
 	"arrowcloudapi/models"
-	"arrowcloudapi/service/swarm/compose"
+	"arrowcloudapi/utils"
 	"arrowcloudapi/utils/log"
 	"errors"
 	"fmt"
 
 	composetypes "github.com/docker/cli/cli/compose/types"
 )
-
-func init() {
-	compose.RegisterValidator(&NetworksValidator{})
-}
 
 type NetworksValidator struct {
 }
@@ -33,6 +29,8 @@ func (nv *NetworksValidator) Validate(stack models.Stack, stackConfig *composety
 
 	if len(stackConfig.Networks) == 0 {
 		log.Error("The stack does not have network definition.")
+		errMsg := "A stack must include a network and attach all services to it."
+		errs = append(errs, errors.New(errMsg))
 	}
 
 	for _, service := range stackConfig.Services {
@@ -44,5 +42,36 @@ func (nv *NetworksValidator) Validate(stack models.Stack, stackConfig *composety
 		}
 	}
 
+	if len(errs) == 0 {
+		addStackNetwork(yamlMap)
+	}
+
 	return errs
+}
+
+func addServiceNetwork(serviceName string, serviceConfig *map[string]interface{}, network string) {
+
+	networkInf := (*serviceConfig)["networks"]
+
+	var networks []interface{}
+	if networkInf == nil {
+		networks = []interface{}{}
+	} else {
+		networks = networkInf.([]interface{})
+	}
+
+	networks = append(networks, network)
+	(*serviceConfig)["networks"] = networks
+
+	log.Debugf("networks config of service %s", serviceName)
+	utils.PrettyPrint(networks)
+}
+
+func addStackNetwork(composeMap *map[string]interface{}) {
+
+	networks := (*composeMap)["networks"].(map[string]interface{})
+
+	networks["proxy_network"] = map[string]interface{}{
+		"external": true,
+	}
 }

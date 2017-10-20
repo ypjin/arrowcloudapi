@@ -21,7 +21,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	_ "arrowcloudapi/beego_ext"
-	_ "arrowcloudapi/service/swarm/compose/validator"
 	"arrowcloudapi/utils/log"
 )
 

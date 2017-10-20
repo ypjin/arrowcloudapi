@@ -2,16 +2,13 @@ package validator
 
 import (
 	"arrowcloudapi/models"
-	"arrowcloudapi/service/swarm/compose"
 	"arrowcloudapi/utils"
 	"arrowcloudapi/utils/log"
+	"fmt"
+	"os"
 
 	composetypes "github.com/docker/cli/cli/compose/types"
 )
-
-func init() {
-	compose.RegisterValidator(&PortsValidator{})
-}
 
 type PortsValidator struct {
 }
@@ -37,6 +34,8 @@ func (pv *PortsValidator) Validate(stack models.Stack, stackConfig *composetypes
 
 	errs := []error{}
 
+	servicesConfig := (*yamlMap)["services"].(map[string]interface{})
+
 	for _, service := range stackConfig.Services {
 
 		if service.Ports == nil {
@@ -44,12 +43,26 @@ func (pv *PortsValidator) Validate(stack models.Stack, stackConfig *composetypes
 			continue
 		}
 
+		// according to docker-flow-proxy the service does not need to expose any ports,
+		// but we need to add labels for docker-flow-proxy to discover it.
+		serviceConfig := servicesConfig[service.Name].(map[string]interface{})
+		delete(serviceConfig, "ports")
+
+		// The service needs to be attached to proxy_network so that haproxy can access it
+		addServiceNetwork(service.Name, &serviceConfig, "proxy_network")
+		serviceDomain := service.Name + "." + stack.ID + ".stack." + os.Getenv("ARROWCLOUD_DOMAIN")
+		addServiceLabel(service.Name, &serviceConfig, "com.df.notify=true")
+		addServiceLabel(service.Name, &serviceConfig, "com.df.distribute=true")
+		addServiceLabel(service.Name, &serviceConfig, "com.df.serviceDomain="+serviceDomain)
+
 		// composetypes.ServicePortConfig
 		log.Debugf("The service %s's ports config:", service.Name)
 		for _, portConfig := range service.Ports {
 			utils.PrettyPrint(portConfig)
-		}
 
+			// http://proxy.dockerflow.com/usage/#reconfigure
+			addServiceLabel(service.Name, &serviceConfig, "com.df.port="+fmt.Sprintf("%v", portConfig.Target))
+		}
 	}
 
 	return errs

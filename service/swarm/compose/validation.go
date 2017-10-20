@@ -13,12 +13,13 @@ import (
 	"github.com/pkg/errors"
 
 	"arrowcloudapi/models"
+	"arrowcloudapi/service/swarm/compose/validator"
 	"arrowcloudapi/utils"
 	"arrowcloudapi/utils/log"
 )
 
 var (
-	validators = make(map[string]Validator)
+	validators []Validator
 )
 
 type Validator interface {
@@ -26,9 +27,19 @@ type Validator interface {
 	Name() string
 }
 
-func RegisterValidator(v Validator) {
-	validators[v.Name()] = v
+func init() {
+	validators = []Validator{
+		// &validator.ConstraintsValidator{},
+		&validator.NetworksValidator{},
+		&validator.PortsValidator{},
+		&validator.VolumesValidator{},
+		&validator.LabelsValidator{},
+	}
 }
+
+// func RegisterValidator(v Validator) {
+// 	validators[v.Name()] = v
+// }
 
 // https://github.com/docker/cli/blob/master/cli/command/stack/deploy.go#L23
 func Validate(stack *models.Stack, composeFile string) (*map[string]interface{}, []error) {

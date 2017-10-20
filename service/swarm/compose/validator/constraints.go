@@ -9,10 +9,6 @@ import (
 	composetypes "github.com/docker/cli/cli/compose/types"
 )
 
-func init() {
-	// compose.RegisterValidator(&ConstraintsValidator{})
-}
-
 type ConstraintsValidator struct {
 }
 

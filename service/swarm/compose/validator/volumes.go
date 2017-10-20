@@ -2,7 +2,6 @@ package validator
 
 import (
 	"arrowcloudapi/models"
-	"arrowcloudapi/service/swarm/compose"
 	"arrowcloudapi/utils"
 	"arrowcloudapi/utils/log"
 	"errors"
@@ -10,10 +9,6 @@ import (
 
 	composetypes "github.com/docker/cli/cli/compose/types"
 )
-
-func init() {
-	compose.RegisterValidator(&VolumesValidator{})
-}
 
 type VolumesValidator struct {
 }

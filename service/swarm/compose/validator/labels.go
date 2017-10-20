@@ -2,16 +2,11 @@ package validator
 
 import (
 	"arrowcloudapi/models"
-	"arrowcloudapi/service/swarm/compose"
 	"arrowcloudapi/utils"
 	"arrowcloudapi/utils/log"
 
 	composetypes "github.com/docker/cli/cli/compose/types"
 )
-
-func init() {
-	compose.RegisterValidator(&LabelsValidator{})
-}
 
 type LabelsValidator struct {
 }
@@ -37,29 +32,34 @@ func (lv *LabelsValidator) Validate(stack models.Stack, stackConfig *composetype
 
 		service := serviceInf.(map[string]interface{})
 
-		deployInf := service["deploy"]
-		var deploy map[string]interface{}
-		if deployInf == nil {
-			deploy = map[string]interface{}{}
-		} else {
-			deploy = deployInf.(map[string]interface{})
-		}
-		service["deploy"] = deploy
-
-		labelsInf := deploy["labels"]
-		var labels []interface{}
-		if labelsInf == nil {
-			labels = []interface{}{}
-		} else {
-			labels = labelsInf.([]interface{})
-		}
-
-		labels = append(labels, customLabel)
-		deploy["labels"] = labels
-
-		log.Debugf("deploy config of service %s", name)
-		utils.PrettyPrint(deploy)
+		addServiceLabel(name, &service, customLabel)
 	}
 
 	return errs
+}
+
+func addServiceLabel(serviceName string, serviceConfig *map[string]interface{}, label string) {
+
+	deployInf := (*serviceConfig)["deploy"]
+	var deploy map[string]interface{}
+	if deployInf == nil {
+		deploy = map[string]interface{}{}
+	} else {
+		deploy = deployInf.(map[string]interface{})
+	}
+	(*serviceConfig)["deploy"] = deploy
+
+	labelsInf := deploy["labels"]
+	var labels []interface{}
+	if labelsInf == nil {
+		labels = []interface{}{}
+	} else {
+		labels = labelsInf.([]interface{})
+	}
+
+	labels = append(labels, label)
+	deploy["labels"] = labels
+
+	log.Debugf("deploy config of service %s", serviceName)
+	utils.PrettyPrint(deploy)
 }
