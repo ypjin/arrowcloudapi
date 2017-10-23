@@ -54,6 +54,12 @@ func (pv *PortsValidator) Validate(stack models.Stack, stackConfig *composetypes
 		addServiceLabel(service.Name, &serviceConfig, "com.df.notify=true")
 		addServiceLabel(service.Name, &serviceConfig, "com.df.distribute=true")
 		addServiceLabel(service.Name, &serviceConfig, "com.df.serviceDomain="+serviceDomain)
+		// https://github.com/vfarcic/docker-flow-proxy/issues/256
+		// https://github.com/vfarcic/docker-flow-proxy/issues/140
+		// (not related but useful: https://github.com/vfarcic/docker-flow-proxy/issues/287)
+		// (not related but useful: https://github.com/vfarcic/docker-flow-proxy/issues/107)
+		// (not related but useful: https://github.com/vfarcic/docker-flow-proxy/issues/293)
+		addServiceLabel(service.Name, &serviceConfig, "com.df.serviceDomainMatchAll=true")
 
 		// composetypes.ServicePortConfig
 		log.Debugf("The service %s's ports config:", service.Name)

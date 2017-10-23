@@ -14,7 +14,6 @@ import (
 
 	"arrowcloudapi/models"
 	"arrowcloudapi/service/swarm/compose/validator"
-	"arrowcloudapi/utils"
 	"arrowcloudapi/utils/log"
 )
 
@@ -75,7 +74,7 @@ func Validate(stack *models.Stack, composeFile string) (*map[string]interface{},
 	// map[string]interface{}
 	configYaml := configDetails.ConfigFiles[0].Config
 
-	utils.PrettyPrint(configYaml)
+	// utils.PrettyPrint(configYaml)
 
 	var yamlBytes []byte
 	yamlBytes, err = yaml.Marshal(configYaml)
@@ -98,7 +97,7 @@ func Validate(stack *models.Stack, composeFile string) (*map[string]interface{},
 		return nil, allValidationErrs
 	}
 
-	utils.PrettyPrint(configYaml)
+	// utils.PrettyPrint(configYaml)
 
 	return &configYaml, []error{}
 }
