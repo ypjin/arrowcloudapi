@@ -3,8 +3,6 @@ package auth
 import (
 	"arrowcloudapi/models"
 	"arrowcloudapi/service/auth/dashboard"
-	"arrowcloudapi/service/auth/db"
-	"arrowcloudapi/service/auth/ldap"
 	"arrowcloudapi/utils/log"
 	"fmt"
 	"os"
@@ -26,8 +24,6 @@ type Authenticator interface {
 var registry = make(map[string]Authenticator)
 
 func init() {
-	Register("db_auth", &db.Auth{})
-	Register("ldap_auth", &ldap.Auth{})
 	Register("dashboard", &dashboard.Auth{})
 }
 

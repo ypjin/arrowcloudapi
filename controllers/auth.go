@@ -3,7 +3,6 @@ package controllers
 import (
 	"net/http"
 
-	"arrowcloudapi/dao"
 	"arrowcloudapi/models"
 	"arrowcloudapi/service/auth"
 	"arrowcloudapi/utils/log"
@@ -56,26 +55,4 @@ func (ac *AuthController) SwitchLanguage() {
 	ac.SetSession("lang", lang)
 	ac.Data["Lang"] = lang
 	ac.Redirect(ac.Ctx.Request.Header.Get("Referer")+hash, http.StatusFound)
-}
-
-// UserExists checks if user exists when user input value in sign in form.
-func (ac *AuthController) UserExists() {
-	target := ac.GetString("target")
-	value := ac.GetString("value")
-
-	user := models.User{}
-	switch target {
-	case "username":
-		user.Username = value
-	case "email":
-		user.Email = value
-	}
-
-	exist, err := dao.UserExists(user, target)
-	if err != nil {
-		log.Errorf("Error occurred in UserExists: %v", err)
-		ac.CustomAbort(http.StatusInternalServerError, "Internal error.")
-	}
-	ac.Data["json"] = exist
-	ac.ServeJSON()
 }
