@@ -266,7 +266,7 @@ func (p *StackAPI) Delete() {
 		folderNames := strings.Split(stack.VolumeFolders, ",")
 		for _, folderName := range folderNames {
 			folderPath := path.Join("/volume_home", folderName)
-			err := os.Remove(folderPath)
+			err := os.RemoveAll(folderPath)
 			if err != nil {
 				log.Errorf("Failed to remove volume folder %s for stack %s. %v", folderName, stack.Name, err)
 			}

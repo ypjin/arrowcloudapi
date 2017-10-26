@@ -151,7 +151,7 @@ func (vv *VolumesValidator) Validate(stack *models.Stack, stackConfig *composety
 				volumesMap[name] = volumeConfigMap
 			}
 
-			folderName, err := createVolumeFolder(stack, volumeConfig.Name)
+			folderName, err := createVolumeFolder(stack, name)
 			if err != nil {
 				errs = append(errs, err)
 				return errs
