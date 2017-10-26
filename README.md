@@ -1,9 +1,9 @@
 work dir:
-/Users/yjin/lab/beego-projects/src/control-plane
+/Users/yjin/lab/beego-projects/src/arrowcloudapi
 
 env vars:
 
-export GOPATH=/Users/yjin/lab/beego-projects/src/control-plane/vendor:/Users/yjin/lab/beego-projects/src/control-plane
+export GOPATH=/Users/yjin/lab/beego-projects
 
 
 run:
