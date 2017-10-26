@@ -22,7 +22,7 @@ func (cv *ConstraintsValidator) Name() string {
     * how about db service?
         * use a special constraint to identify db services
 */
-func (cv *ConstraintsValidator) Validate(stack models.Stack, stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error {
+func (cv *ConstraintsValidator) Validate(stack *models.Stack, stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error {
 
 	log.Debug("constraints validator is about to validate...")
 

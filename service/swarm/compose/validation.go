@@ -22,7 +22,7 @@ var (
 )
 
 type Validator interface {
-	Validate(stack models.Stack, stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error
+	Validate(stack *models.Stack, stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error
 	Name() string
 }
 
@@ -86,7 +86,7 @@ func Validate(stack *models.Stack, composeFile string) (*map[string]interface{},
 	// run validators (transformers)
 	allValidationErrs := []error{}
 	for _, v := range validators {
-		errs := v.Validate(*stack, config, &configYaml)
+		errs := v.Validate(stack, config, &configYaml)
 		if errs != nil && len(errs) > 0 {
 			allValidationErrs = append(allValidationErrs, errs...)
 		}

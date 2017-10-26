@@ -30,6 +30,7 @@ func GetStack(stackId string) (*models.Stack, error) {
 		UpdateTime:             stackM["update_time"].(time.Time),
 		OriginalComposeFile:    stackM["compose_file_original"].(string),
 		TransformedComposeFile: stackM["compose_file_transformed"].(string),
+		VolumeFolders:          stackM["volume_folders"].(string),
 	}
 
 	return &stack, nil
@@ -97,12 +98,13 @@ func GetStacks(user models.User, orgID string, stackName string, userOnly bool) 
 	stacks := []models.Stack{}
 	for _, stackM := range result {
 		stack := models.Stack{
-			ID:           stackM["_id"].(bson.ObjectId).Hex(),
-			Name:         stackM["name"].(string),
-			UserID:       stackM["user_id"].(bson.ObjectId).Hex(),
-			OrgID:        stackM["org_id"].(string),
-			CreationTime: stackM["creation_time"].(time.Time),
-			UpdateTime:   stackM["update_time"].(time.Time),
+			ID:            stackM["_id"].(bson.ObjectId).Hex(),
+			Name:          stackM["name"].(string),
+			UserID:        stackM["user_id"].(bson.ObjectId).Hex(),
+			OrgID:         stackM["org_id"].(string),
+			CreationTime:  stackM["creation_time"].(time.Time),
+			UpdateTime:    stackM["update_time"].(time.Time),
+			VolumeFolders: stackM["volume_folders"].(string),
 		}
 		if stackM["compose_file_original"] != nil {
 			stack.OriginalComposeFile = stackM["compose_file_original"].(string)
@@ -127,6 +129,7 @@ func SaveStack(stack models.Stack) (string, error) {
 		"update_time":              stack.UpdateTime,
 		"compose_file_original":    stack.OriginalComposeFile,
 		"compose_file_transformed": stack.TransformedComposeFile,
+		"volume_folders":           stack.VolumeFolders,
 	}
 
 	var query bson.M

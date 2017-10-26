@@ -45,13 +45,13 @@ func main() {
 
 	var err error
 
-	managerIP, err := findSwarmManager()
-	if err != nil {
-		panic(err)
-	}
-	log.Infof("Found swarm manager: %s", managerIP)
+	// managerIP, err := findSwarmManager()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// log.Infof("Found swarm manager: %s", managerIP)
 
-	// managerIP := "54.168.32.62"
+	managerIP := "54.168.32.62"
 
 	os.Setenv("DOCKER_HOST", "tcp://"+managerIP+":2376")
 	os.Setenv("DOCKER_CERT_PATH", "/etc/docker-certs")

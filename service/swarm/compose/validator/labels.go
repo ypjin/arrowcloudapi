@@ -19,7 +19,7 @@ func (lv *LabelsValidator) Name() string {
   verify labels
     * We are going to add com.axway.stack.id label here.
 */
-func (lv *LabelsValidator) Validate(stack models.Stack, stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error {
+func (lv *LabelsValidator) Validate(stack *models.Stack, stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error {
 
 	log.Debug("labels validator is about to validate...")
 

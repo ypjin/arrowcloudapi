@@ -6,6 +6,9 @@ import (
 	"arrowcloudapi/utils/log"
 	"errors"
 	"fmt"
+	"os"
+	"path"
+	"strings"
 
 	composetypes "github.com/docker/cli/cli/compose/types"
 )
@@ -21,7 +24,7 @@ func (vv *VolumesValidator) Name() string {
  * a stack should have its own network
  * all services should be on the network
  */
-func (vv *VolumesValidator) Validate(stack models.Stack, stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error {
+func (vv *VolumesValidator) Validate(stack *models.Stack, stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error {
 
 	log.Debug("volumes validator is about to validate...")
 
@@ -100,6 +103,7 @@ func (vv *VolumesValidator) Validate(stack models.Stack, stackConfig *composetyp
 	*/
 
 	utils.PrettyPrint(stackConfig.Volumes)
+	folderNames := []string{}
 
 	for name, volumeConfig := range stackConfig.Volumes {
 		if volumeConfig.External.External {
@@ -136,6 +140,7 @@ func (vv *VolumesValidator) Validate(stack models.Stack, stackConfig *composetyp
 		*/
 
 		if volumeConfig.Driver == "" {
+
 			volumesMap := (*yamlMap)["volumes"].(map[string]interface{})
 			var volumeConfigMap map[string]interface{}
 			if volumesMap[name] != nil {
@@ -146,15 +151,31 @@ func (vv *VolumesValidator) Validate(stack models.Stack, stackConfig *composetyp
 				volumesMap[name] = volumeConfigMap
 			}
 
+			folderName, err := createVolumeFolder(stack, volumeConfig.Name)
+			if err != nil {
+				errs = append(errs, err)
+				return errs
+			}
+			folderNames = append(folderNames, folderName)
+
 			volumeConfigMap["driver"] = "local"
 			volumeConfigMap["driver_opts"] = map[string]interface{}{
-				"device": ":/appc_data/dbstore",
-				"o":      "addr=10.173.145.82,rw",
+				"device": ":/appc_data/stack-volume/" + folderName,
+				"o":      "addr=" + os.Getenv("NFS_SERVER_IP") + ",rw",
 				"type":   "nfs",
 			}
 		}
 
 	}
+	stack.VolumeFolders = strings.Join(folderNames, ",")
 
 	return errs
+}
+
+func createVolumeFolder(stack *models.Stack, volumeName string) (folderName string, err error) {
+
+	folderName = stack.ID + "_" + stack.Name + "_" + volumeName
+	folderPath := path.Join("/volume_home", folderName)
+	os.MkdirAll(folderPath, 0777)
+	return
 }

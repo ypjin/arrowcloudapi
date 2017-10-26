@@ -9,8 +9,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -259,7 +261,19 @@ func (p *StackAPI) Delete() {
 
 	log.Debugf("data for response: %s", output)
 
-	// 3. remove the stack from db
+	// 3. remove volume folders
+	if stack.VolumeFolders != "" {
+		folderNames := strings.Split(stack.VolumeFolders, ",")
+		for _, folderName := range folderNames {
+			folderPath := path.Join("/volume_home", folderName)
+			err := os.Remove(folderPath)
+			if err != nil {
+				log.Errorf("Failed to remove volume folder %s for stack %s. %v", folderName, stack.Name, err)
+			}
+		}
+	}
+
+	// 4. remove the stack from db
 	err = dao.RemoveStack(stack.ID)
 	if err != nil {
 		log.Errorf("dao.RemoveStack error: %v", err)

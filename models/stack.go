@@ -17,4 +17,5 @@ type Stack struct {
 	UpdateTime             time.Time `orm:"update_time" json:"update_time"`
 	OriginalComposeFile    string    `orm:"column(compose_file_original)" json:"compose_file_original"`
 	TransformedComposeFile string    `orm:"column(compose_file_transformed)" json:"compose_file_transformed"`
+	VolumeFolders          string    `orm:"column(volume_folders)" json:"volume_folders"`
 }

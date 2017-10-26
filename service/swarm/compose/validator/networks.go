@@ -21,7 +21,7 @@ func (nv *NetworksValidator) Name() string {
  * a stack should have its own network
  * all services should be on the network
  */
-func (nv *NetworksValidator) Validate(stack models.Stack, stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error {
+func (nv *NetworksValidator) Validate(stack *models.Stack, stackConfig *composetypes.Config, yamlMap *map[string]interface{}) []error {
 
 	log.Debug("networks validator is about to validate...")
 
