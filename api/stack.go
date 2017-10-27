@@ -403,9 +403,31 @@ func (p *StackAPI) List() {
 
 	log.Debugf("data for response: %v", stacksFromSwarm)
 
+	stackInfos := []interface{}{}
+	for _, stack := range *stacks {
+
+		urls := []string{}
+		if stack.PublicServices != "" {
+			pServiceNames := strings.Split(stack.PublicServices, ",")
+			for _, name := range pServiceNames {
+				url := name + "." + stack.ID + "." + os.Getenv("ARROWCLOUD_DOMAIN")
+				urls = append(urls, url)
+			}
+		}
+
+		stackInfo := map[string]interface{}{
+			"ID":             stack.ID,
+			"Name":           stack.Name,
+			"NumServices":    stacksFromSwarm[stack.ID+","+stack.Name],
+			"PublicServices": urls,
+		}
+
+		stackInfos = append(stackInfos, stackInfo)
+	}
+
 	result := map[string]interface{}{
 		"success": true,
-		"data":    stacksFromSwarm,
+		"data":    stackInfos,
 	}
 
 	p.Data["json"] = result

@@ -17,5 +17,8 @@ type Stack struct {
 	UpdateTime             time.Time `orm:"update_time" json:"update_time"`
 	OriginalComposeFile    string    `orm:"column(compose_file_original)" json:"compose_file_original"`
 	TransformedComposeFile string    `orm:"column(compose_file_transformed)" json:"compose_file_transformed"`
-	VolumeFolders          string    `orm:"column(volume_folders)" json:"volume_folders"`
+	// comma separated NFS folder names used for volumes (no path info)
+	VolumeFolders string `orm:"column(volume_folders)" json:"volume_folders"`
+	// comma separated service names which need to be exposed
+	PublicServices string `orm:"column(public_services)" json:"public_services"`
 }

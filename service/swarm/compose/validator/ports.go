@@ -6,6 +6,7 @@ import (
 	"arrowcloudapi/utils/log"
 	"fmt"
 	"os"
+	"strings"
 
 	composetypes "github.com/docker/cli/cli/compose/types"
 )
@@ -36,12 +37,17 @@ func (pv *PortsValidator) Validate(stack *models.Stack, stackConfig *composetype
 
 	servicesConfig := (*yamlMap)["services"].(map[string]interface{})
 
+	publicServices := []string{}
 	for _, service := range stackConfig.Services {
 
 		if service.Ports == nil {
 			log.Debugf("The service %s does not expose ports.", service.Name)
 			continue
 		}
+
+		utils.PrettyPrint(service.Ports)
+
+		publicServices = append(publicServices, service.Name)
 
 		// according to docker-flow-proxy the service does not need to expose any ports,
 		// but we need to add labels for docker-flow-proxy to discover it.
@@ -63,13 +69,19 @@ func (pv *PortsValidator) Validate(stack *models.Stack, stackConfig *composetype
 
 		// composetypes.ServicePortConfig
 		log.Debugf("The service %s's ports config:", service.Name)
-		for _, portConfig := range service.Ports {
-			utils.PrettyPrint(portConfig)
 
+		if len(service.Ports) == 1 {
 			// http://proxy.dockerflow.com/usage/#reconfigure
-			addServiceLabel(service.Name, &serviceConfig, "com.df.port="+fmt.Sprintf("%v", portConfig.Target))
+			addServiceLabel(service.Name, &serviceConfig, "com.df.port="+fmt.Sprintf("%v", service.Ports[0].Target))
+		} else {
+			for index, portConfig := range service.Ports {
+				// http://proxy.dockerflow.com/usage/#reconfigure
+				addServiceLabel(service.Name, &serviceConfig, "com.df.port."+string(index)+"="+fmt.Sprintf("%v", portConfig.Target))
+			}
 		}
 	}
+
+	stack.PublicServices = strings.Join(publicServices, ",")
 
 	return errs
 }

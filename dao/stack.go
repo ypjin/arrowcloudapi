@@ -15,25 +15,13 @@ func GetStack(stackId string) (*models.Stack, error) {
 	query := bson.M{
 		"_id": bson.ObjectIdHex(stackId),
 	}
-
 	stackM, err := mongo.FindOneDocument(STACKS_COLLECTION, query)
 	if err != nil {
 		return nil, err
 	}
 
-	stack := models.Stack{
-		ID:                     stackM["_id"].(bson.ObjectId).Hex(),
-		Name:                   stackM["name"].(string),
-		UserID:                 stackM["user_id"].(bson.ObjectId).Hex(),
-		OrgID:                  stackM["org_id"].(bson.ObjectId).Hex(),
-		CreationTime:           stackM["creation_time"].(time.Time),
-		UpdateTime:             stackM["update_time"].(time.Time),
-		OriginalComposeFile:    stackM["compose_file_original"].(string),
-		TransformedComposeFile: stackM["compose_file_transformed"].(string),
-		VolumeFolders:          stackM["volume_folders"].(string),
-	}
-
-	return &stack, nil
+	stack := createStackModel(&stackM)
+	return stack, nil
 }
 
 func RemoveStack(stackId string) (err error) {
@@ -85,7 +73,6 @@ func GetStacks(user models.User, orgID string, stackName string, userOnly bool) 
 	if userOnly {
 		dbQ["user_id"] = bson.ObjectIdHex(user.ID)
 	}
-
 	if stackName != "" {
 		dbQ["name"] = bson.RegEx{stackName, ""}
 	}
@@ -97,23 +84,8 @@ func GetStacks(user models.User, orgID string, stackName string, userOnly bool) 
 
 	stacks := []models.Stack{}
 	for _, stackM := range result {
-		stack := models.Stack{
-			ID:            stackM["_id"].(bson.ObjectId).Hex(),
-			Name:          stackM["name"].(string),
-			UserID:        stackM["user_id"].(bson.ObjectId).Hex(),
-			OrgID:         stackM["org_id"].(string),
-			CreationTime:  stackM["creation_time"].(time.Time),
-			UpdateTime:    stackM["update_time"].(time.Time),
-			VolumeFolders: stackM["volume_folders"].(string),
-		}
-		if stackM["compose_file_original"] != nil {
-			stack.OriginalComposeFile = stackM["compose_file_original"].(string)
-		}
-		if stackM["compose_file_transformed"] != nil {
-			stack.TransformedComposeFile = stackM["compose_file_transformed"].(string)
-		}
-
-		stacks = append(stacks, stack)
+		stack := createStackModel(&stackM)
+		stacks = append(stacks, *stack)
 	}
 
 	return &stacks, nil
@@ -130,6 +102,7 @@ func SaveStack(stack models.Stack) (string, error) {
 		"compose_file_original":    stack.OriginalComposeFile,
 		"compose_file_transformed": stack.TransformedComposeFile,
 		"volume_folders":           stack.VolumeFolders,
+		"public_services":          stack.PublicServices,
 	}
 
 	var query bson.M
@@ -151,4 +124,30 @@ func SaveStack(stack models.Stack) (string, error) {
 	}
 
 	return saved["_id"].(bson.ObjectId).Hex(), err
+}
+
+func createStackModel(stackM *bson.M) *models.Stack {
+
+	stack := models.Stack{
+		ID:           (*stackM)["_id"].(bson.ObjectId).Hex(),
+		Name:         (*stackM)["name"].(string),
+		UserID:       (*stackM)["user_id"].(bson.ObjectId).Hex(),
+		OrgID:        (*stackM)["org_id"].(string),
+		CreationTime: (*stackM)["creation_time"].(time.Time),
+		UpdateTime:   (*stackM)["update_time"].(time.Time),
+	}
+	if (*stackM)["public_services"] != nil {
+		stack.PublicServices = (*stackM)["public_services"].(string)
+	}
+	if (*stackM)["volume_folders"] != nil {
+		stack.VolumeFolders = (*stackM)["volume_folders"].(string)
+	}
+	if (*stackM)["compose_file_original"] != nil {
+		stack.OriginalComposeFile = (*stackM)["compose_file_original"].(string)
+	}
+	if (*stackM)["compose_file_transformed"] != nil {
+		stack.TransformedComposeFile = (*stackM)["compose_file_transformed"].(string)
+	}
+
+	return &stack
 }

@@ -101,11 +101,12 @@ func ListStacks(stackIds []string) (map[string]int, error) {
 			return nil, errors.Errorf("cannot get label %s for service %s",
 				LabelNamespace, service.ID)
 		}
-		numServices, ok := m[name]
+		key := stackId + "," + name
+		numServices, ok := m[key]
 		if !ok {
-			m[name] = 1
+			m[key] = 1
 		} else {
-			m[name] = numServices + 1
+			m[key] = numServices + 1
 		}
 	}
 
